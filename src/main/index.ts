@@ -430,7 +430,14 @@ function setupIpcHandlers(): void {
   })
 
   ipcMain.handle('plugin:uninstall', async (_, pluginId: string) => {
-    return await pluginManager.uninstallPlugin(pluginId)
+    const result = await pluginManager.uninstallPlugin(pluginId)
+    if (result.success) {
+      const removed = settingsManager.removePluginShortcut(pluginId)
+      if (removed?.shortcut) {
+        shortcutManager.unregister(removed.shortcut)
+      }
+    }
+    return result
   })
 
   ipcMain.handle('plugin:list', async () => {
@@ -579,10 +586,69 @@ function setupIpcHandlers(): void {
     }
   )
 
+  ipcMain.handle(
+    'settings:setPluginShortcut',
+    async (_, pluginId: string, value: string): Promise<{ success: boolean; message?: string }> => {
+      // 插件快捷键必须是已安装且启用的插件
+      if (!value) {
+        return { success: false, message: '快捷键不能为空' }
+      }
+      const plugins = await pluginManager.listPlugins()
+      const plugin = plugins.find((item) => item.id === pluginId)
+      if (!plugin) {
+        return { success: false, message: '插件未安装' }
+      }
+      if (!plugin.enabled) {
+        return { success: false, message: '插件未启用' }
+      }
+
+      const oldShortcuts = settingsManager.getPluginShortcuts()
+      const existing = oldShortcuts.find((item) => item.pluginId === pluginId)
+
+      // 变更前先取消旧快捷键，避免重复注册
+      if (existing?.shortcut === value) {
+        return { success: true }
+      }
+
+      if (existing?.shortcut) {
+        shortcutManager.unregister(existing.shortcut)
+      }
+
+      const success = shortcutManager.register(pluginId, value, () => {
+        openPluginFromShortcut(pluginId)
+      })
+
+      if (!success) {
+        // 注册失败时回滚到旧快捷键
+        if (existing?.shortcut) {
+          shortcutManager.register(pluginId, existing.shortcut, () => {
+            openPluginFromShortcut(pluginId)
+          })
+        }
+        return { success: false, message: '快捷键注册失败，可能被系统占用' }
+      }
+
+      settingsManager.setPluginShortcut(pluginId, value)
+      return { success: true }
+    }
+  )
+
+  ipcMain.handle('settings:removePluginShortcut', (_, pluginId: string): { success: boolean } => {
+    // 移除设置并注销注册的快捷键
+    const removed = settingsManager.removePluginShortcut(pluginId)
+    if (removed?.shortcut) {
+      shortcutManager.unregister(removed.shortcut)
+    }
+    return { success: true }
+  })
+
   ipcMain.handle('settings:update', (_, partial: Partial<AppSettings>) => {
     settingsManager.update(partial)
     if (partial.general) {
       applyGeneralSettings(partial.general)
+    }
+    if (partial.pluginShortcuts) {
+      resyncPluginShortcuts()
     }
     return { success: true }
   })
@@ -885,5 +951,64 @@ function registerGlobalShortcuts(): void {
         })
       }
     }
+
+    // 注册插件级快捷键（全局）
+    void registerPluginShortcuts()
   })
+}
+
+const openPluginFromShortcut = (pluginId: string): void => {
+  // 全局快捷键触发时确保主窗口可见并打开插件
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    logger.warn({ pluginId }, '主窗口已销毁，无法打开插件')
+    return
+  }
+
+  if (!mainWindow.isVisible()) {
+    if (process.platform === 'darwin') {
+      app.show()
+    }
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore()
+    }
+    mainWindow.show()
+  }
+  mainWindow.focus()
+  mainWindow.webContents.send('open-plugin-from-shortcut', pluginId)
+}
+
+const registerPluginShortcuts = async (): Promise<void> => {
+  const pluginShortcuts = settingsManager.getPluginShortcuts()
+  if (pluginShortcuts.length === 0) return
+
+  const plugins = await pluginManager.listPlugins()
+  const installedMap = new Map(plugins.map((plugin) => [plugin.id, plugin.enabled]))
+
+  pluginShortcuts.forEach(({ pluginId, shortcut }) => {
+    // 跳过空配置或未安装/未启用的插件
+    if (!shortcut) return
+    if (!installedMap.has(pluginId)) {
+      settingsManager.removePluginShortcut(pluginId)
+      return
+    }
+    if (!installedMap.get(pluginId)) return
+
+    const success = shortcutManager.register(pluginId, shortcut, () => {
+      openPluginFromShortcut(pluginId)
+    })
+    if (!success) {
+      logger.warn({ pluginId, shortcut }, '插件快捷键注册失败，可能被系统占用')
+    }
+  })
+}
+
+const resyncPluginShortcuts = (): void => {
+  // 先清理所有插件级快捷键，再按设置重新注册
+  shortcutManager.getAllShortcuts().forEach(({ pluginId, accelerator }) => {
+    if (pluginId !== 'system') {
+      shortcutManager.unregister(accelerator)
+    }
+  })
+
+  void registerPluginShortcuts()
 }
