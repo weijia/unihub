@@ -226,6 +226,8 @@ const startDialogRecording = (): void => {
   }
   dialogRecording.value = true
   startRecordingPlugin(selectedPluginId.value)
+}
+
 // 保存通用设置（开机自启动/最小化到托盘）
 const saveGeneralSetting = async <K extends keyof Settings['general']>(
   key: K,

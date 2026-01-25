@@ -1,7 +1,41 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-01-10T12:00:00Z",
+  "lastUpdated": "2025-01-25T12:00:00Z",
   "plugins": [
+    {
+      "id": "com.unihub.timestamp-tool",
+      "name": "时间戳转换",
+      "version": "1.0.0",
+      "description": "时间戳转换工具 - 支持时间段/秒/毫秒/纳秒互转",
+      "author": {
+        "name": "UniHub Team",
+        "email": "team@unihub.dev",
+        "url": "https://github.com/unihub"
+      },
+      "icon": "https://api.iconify.design/twemoji/clockwise-vertical-arrows.svg",
+      "category": "tool",
+      "keywords": [
+        "timestamp",
+        "time",
+        "unix",
+        "converter",
+        "timezone",
+        "时间戳",
+        "时间转换",
+        "时间段"
+      ],
+      "permissions": ["clipboard"],
+      "install": {
+        "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/timestamp-tool/plugin.zip"
+      },
+      "homepage": "https://github.com/t8y2",
+      "repository": "https://github.com/t8y2/unihub",
+      "screenshots": [],
+      "downloads": 0,
+      "rating": 5.0,
+      "createdAt": "2025-01-25T12:00:00Z",
+      "updatedAt": "2025-01-25T12:00:00Z"
+    },
     {
       "id": "com.unihub.pdf-merger",
       "name": "PDF 合并工具",
@@ -155,7 +189,7 @@
     {
       "id": "com.unihub.clipboard-history",
       "name": "剪贴板历史",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "剪贴板历史管理工具 - 记录、搜索和管理剪贴板历史",
       "author": {
         "name": "UniHub Team",
@@ -175,7 +209,7 @@
       "downloads": 0,
       "rating": 5.0,
       "createdAt": "2025-01-06T12:00:00Z",
-      "updatedAt": "2025-01-06T12:00:00Z"
+      "updatedAt": "2025-01-25T12:00:00Z"
     },
     {
       "id": "com.unihub.excalidraw",
