@@ -1,4 +1,5 @@
 import { ipcMain, dialog, clipboard, shell, nativeImage, BrowserWindow } from 'electron'
+import { spawn } from 'child_process'
 import { readFile, writeFile, readdir, stat, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { app } from 'electron'
@@ -13,6 +14,62 @@ import { lmdbManager } from './lmdb-manager'
 export class PluginAPI {
   constructor() {
     this.registerHandlers()
+  }
+
+  // 执行系统命令，用于触发系统级粘贴
+  private runSystemCommand(command: string, args: string[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const child = spawn(command, args, { windowsHide: true })
+      child.on('error', (error) => reject(error))
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve()
+        } else {
+          reject(new Error(`Command failed: ${command} (exit ${code ?? 'unknown'})`))
+        }
+      })
+    })
+  }
+
+  // 主进程小延迟，确保窗口状态更新后再发快捷键
+  private wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  // 根据平台发送粘贴快捷键，可选先切回上一个窗口
+  private async sendSystemPaste(options: { switchToLastWindow?: boolean } = {}): Promise<void> {
+    const switchToLastWindow = options.switchToLastWindow ?? false
+
+    if (process.platform === 'win32') {
+      // Windows 用 Alt+Tab 切回上一个窗口，再发送 Ctrl+V
+      const command = switchToLastWindow
+        ? "$ws = New-Object -ComObject WScript.Shell; Start-Sleep -Milliseconds 80; $ws.SendKeys('%{TAB}'); Start-Sleep -Milliseconds 120; $ws.SendKeys('^v')"
+        : "$ws = New-Object -ComObject WScript.Shell; Start-Sleep -Milliseconds 80; $ws.SendKeys('^v')"
+
+      await this.runSystemCommand('powershell', [
+        '-NoProfile',
+        '-Command',
+        command
+      ])
+      return
+    }
+
+    if (process.platform === 'darwin') {
+      const script = switchToLastWindow
+        ? 'tell application \"System Events\" to keystroke tab using {command down}\n' +
+          'delay 0.15\n' +
+          'tell application \"System Events\" to keystroke \"v\" using {command down}'
+        : 'tell application \"System Events\" to keystroke \"v\" using {command down}'
+
+      await this.runSystemCommand('osascript', ['-e', script])
+      return
+    }
+
+    if (switchToLastWindow) {
+      await this.runSystemCommand('xdotool', ['key', 'Alt+Tab'])
+      await this.wait(120)
+    }
+    await this.runSystemCommand('xdotool', ['key', '--clearmodifiers', 'ctrl+v'])
   }
 
   private registerHandlers(): void {
@@ -203,6 +260,49 @@ export class PluginAPI {
         return { success: false, error: (error as Error).message }
       }
     })
+
+    ipcMain.handle('plugin-api:system:paste', async (event) => {
+      try {
+        const pluginId = this.getPluginIdFromEvent(event)
+        permissionManager.requirePermission(pluginId, 'system')
+
+        await this.sendSystemPaste()
+        return { success: true }
+      } catch (error: unknown) {
+        return { success: false, error: (error as Error).message }
+      }
+    })
+
+    ipcMain.handle(
+      'plugin-api:system:quickPaste',
+      async (event, options: { delayMs?: number; hideWindow?: boolean } = {}) => {
+        try {
+          const pluginId = this.getPluginIdFromEvent(event)
+          permissionManager.requirePermission(pluginId, 'system')
+
+          // 主进程统一控制隐藏与切窗，提升前台焦点稳定性
+          const window = BrowserWindow.fromWebContents(event.sender)
+          // 通过 URL 参数判断悬浮窗，默认不隐藏
+          const isFloating = event.sender.getURL().includes('floating=1')
+          const hideWindow = isFloating ? false : options.hideWindow ?? true
+          if (window && !window.isDestroyed()) {
+            if (hideWindow) {
+              window.hide()
+            }
+          }
+
+          const delayMs = Math.max(120, options.delayMs ?? 220)
+          await this.wait(delayMs)
+
+          await this.sendSystemPaste({ switchToLastWindow: true })
+
+          // 悬浮窗模式不做额外显隐/置顶切换，避免闪烁
+          return { success: true }
+        } catch (error: unknown) {
+          return { success: false, error: (error as Error).message }
+        }
+      }
+    )
 
     // HTTP API（避免 CORS）
     ipcMain.handle('plugin-api:http:request', async (event, options: Record<string, unknown>) => {

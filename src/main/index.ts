@@ -27,6 +27,7 @@ import { updaterManager } from './updater-manager'
 import { pathToFileURL } from 'url'
 import { createLogger, closeLogger } from '../shared/logger'
 import { appScanner } from './app-scanner'
+import { clipboardFloatingWindowManager } from './clipboard-floating-window-manager'
 
 const logger = createLogger('main')
 
@@ -395,6 +396,7 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   // 清理搜索窗口
   searchWindowManager.destroy()
+  clipboardFloatingWindowManager.destroy()
 
   if (process.platform !== 'darwin') {
     // 非 macOS 平台：关闭所有窗口时退出应用
@@ -741,6 +743,44 @@ function setupIpcHandlers(): void {
   })
 
   // 聚焦主窗口（用于切换到内置组件时）
+  // 剪贴板悬浮中转窗口
+  ipcMain.on('clipboard-floating:open', async (_event, payload: { pluginId: string }) => {
+    const pluginId = payload?.pluginId
+    if (!pluginId) {
+      logger.error('Missing pluginId for floating clipboard window')
+      return
+    }
+
+    const result = await pluginManager.loadPlugin(pluginId)
+    if (!result.success) {
+      logger.error({ pluginId, message: result.message }, 'Failed to load plugin for floating window')
+      return
+    }
+
+    let pluginUrl = ''
+    if (result.devUrl) {
+      pluginUrl = result.devUrl
+    } else if (result.htmlPath) {
+      pluginUrl = `plugin://${pluginId}/dist/index.html`
+    }
+
+    if (!pluginUrl) {
+      logger.error({ pluginId }, 'Missing plugin URL for floating clipboard window')
+      return
+    }
+
+    const floatingUrl = appendQueryParams(pluginUrl, {
+      __plugin_id: pluginId,
+      floating: '1'
+    })
+
+    clipboardFloatingWindowManager.openFloatingWindow(pluginId, floatingUrl)
+  })
+
+  ipcMain.on('clipboard-floating:close', () => {
+    clipboardFloatingWindowManager.closeFloatingWindow()
+  })
+
   ipcMain.on('focus-main-window', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.focus()
@@ -896,6 +936,16 @@ function setupIpcHandlers(): void {
 /**
  * 注册全局快捷键
  */
+function appendQueryParams(rawUrl: string, params: Record<string, string>): string {
+  const url = new URL(rawUrl)
+  for (const [key, value] of Object.entries(params)) {
+    if (!url.searchParams.has(key)) {
+      url.searchParams.set(key, value)
+    }
+  }
+  return url.toString()
+}
+
 function registerGlobalShortcuts(): void {
   const shortcuts = settingsManager.getShortcuts()
 

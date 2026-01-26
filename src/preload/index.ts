@@ -66,7 +66,10 @@ const api = {
   system: {
     getInfo: () => ipcRenderer.invoke('plugin-api:system:getInfo'),
     openExternal: (url: string) => ipcRenderer.invoke('plugin-api:system:openExternal', url),
-    showInFolder: (path: string) => ipcRenderer.invoke('plugin-api:system:showInFolder', path)
+    showInFolder: (path: string) => ipcRenderer.invoke('plugin-api:system:showInFolder', path),
+    paste: () => ipcRenderer.invoke('plugin-api:system:paste'),
+    quickPaste: (options?: { delayMs?: number; hideWindow?: boolean }) =>
+      ipcRenderer.invoke('plugin-api:system:quickPaste', options)
   },
   // HTTP API
   http: {
@@ -309,6 +312,17 @@ const unihubAPI = {
     showInFolder: async (path: string) => {
       const result = await ipcRenderer.invoke('plugin-api:system:showInFolder', path)
       return result.success
+    },
+    // 触发系统级粘贴（由主进程执行）
+    paste: async () => {
+      const result = await ipcRenderer.invoke('plugin-api:system:paste')
+      if (!result.success) throw new Error(result.error || '系统粘贴失败')
+    },
+    // 快速粘贴：隐藏窗口、切回前台后再发送粘贴
+    // 快速粘贴支持控制是否隐藏窗口
+    quickPaste: async (options?: { delayMs?: number; hideWindow?: boolean }) => {
+      const result = await ipcRenderer.invoke('plugin-api:system:quickPaste', options)
+      if (!result.success) throw new Error(result.error || '系统快速粘贴失败')
     }
   },
   // 通知 API

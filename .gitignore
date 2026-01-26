@@ -12,3 +12,4 @@ out
 .vercel
 stats-api/.vercel
 .vscode
+/.idea/

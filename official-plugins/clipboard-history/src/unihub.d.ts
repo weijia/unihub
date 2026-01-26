@@ -57,6 +57,8 @@ declare global {
         }>
         openExternal: (url: string) => Promise<void>
         showInFolder: (path: string) => Promise<void>
+        paste: () => Promise<void>
+        quickPaste: (options?: { delayMs?: number; hideWindow?: boolean }) => Promise<void>
       }
 
       http: {
