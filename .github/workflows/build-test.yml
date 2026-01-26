@@ -76,6 +76,9 @@ jobs:
         run: |
           find node_modules -name app-builder -type f -exec chmod +x {} \;
 
+      - name: Prettier check
+        run: pnpm exec prettier --check .
+
       - name: Type check
         run: pnpm typecheck
 
