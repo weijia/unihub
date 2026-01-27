@@ -1,6 +1,14 @@
 import { app, net } from 'electron'
 import { join } from 'path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+  readdirSync,
+  statSync
+} from 'fs'
 import AdmZip from 'adm-zip'
 import { pluginDevServer } from './plugin-dev-server'
 import { permissionManager } from './permission-manager'
@@ -29,7 +37,7 @@ interface PackageJson {
     author?: string | { name: string; email?: string }
     icon?: string
     category?: string
-    entry: string
+    entry?: string // 改为可选，默认使用 dist/index.html
     keywords?: string[]
     permissions?: string[]
     screenshots?: string[]
@@ -200,7 +208,7 @@ export class PluginManager {
         }
 
         // 自动继承 package.json 字段到 unihub 配置
-        manifest = this.mergePackageJsonWithUnihub(pkg)
+        manifest = this.mergePackageJsonWithUnihub(pkg, tempExtract)
       } else if (existsSync(manifestPath)) {
         // 旧格式：兼容 manifest.json
         const oldManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
@@ -390,10 +398,70 @@ export class PluginManager {
   }
 
   /**
+   * 递归查找插件目录中的 index.html 文件
+   * 优先级：dist/index.html > frontend/index.html > 根目录 index.html > 任意子目录的 index.html
+   */
+  private findIndexHtml(pluginDir: string): string | null {
+    // 优先查找常见位置
+    const commonPaths = ['dist/index.html', 'frontend/index.html', 'index.html']
+    for (const path of commonPaths) {
+      const fullPath = join(pluginDir, path)
+      if (existsSync(fullPath)) {
+        logger.info({ path }, '找到入口文件（常见位置）')
+        return path
+      }
+    }
+
+    // 递归查找所有 index.html（最大深度 3 层，避免性能问题）
+    const findRecursive = (
+      dir: string,
+      relativePath: string = '',
+      depth: number = 0
+    ): string | null => {
+      if (depth > 3) return null
+
+      try {
+        const entries = readdirSync(dir)
+
+        for (const entry of entries) {
+          // 跳过 node_modules 和隐藏目录
+          if (entry === 'node_modules' || entry.startsWith('.')) continue
+
+          const fullPath = join(dir, entry)
+          const relPath = relativePath ? `${relativePath}/${entry}` : entry
+
+          try {
+            const stat = statSync(fullPath)
+
+            if (stat.isFile() && entry === 'index.html') {
+              logger.info({ path: relPath }, '找到入口文件（递归查找）')
+              return relPath
+            }
+
+            if (stat.isDirectory()) {
+              const found = findRecursive(fullPath, relPath, depth + 1)
+              if (found) return found
+            }
+          } catch {
+            // 忽略无法访问的文件/目录
+            continue
+          }
+        }
+      } catch {
+        // 忽略无法读取的目录
+      }
+
+      return null
+    }
+
+    return findRecursive(pluginDir)
+  }
+
+  /**
    * 将 package.json 字段自动继承到 unihub 配置中
    * 只有当 unihub 字段未提供时才会继承
    */
-  private mergePackageJsonWithUnihub(pkg: PackageJson): PluginMetadata {
+  private mergePackageJsonWithUnihub(pkg: PackageJson, pluginDir: string): PluginMetadata {
     const unihub = pkg.unihub!
 
     // 处理 author 字段的继承
@@ -417,10 +485,23 @@ export class PluginManager {
       return undefined
     }
 
+    // 自动推断 entry（如果未提供）
+    const getEntry = (unihubEntry?: string): string => {
+      if (unihubEntry) return unihubEntry
+
+      // 递归查找 index.html
+      const foundEntry = this.findIndexHtml(pluginDir)
+      if (foundEntry) return foundEntry
+
+      // 如果找不到，使用默认值（会在 loadPlugin 时报错）
+      logger.warn({ pluginId: unihub.id }, '未找到 index.html，使用默认值 dist/index.html')
+      return 'dist/index.html'
+    }
+
     return {
       // 必填字段
       id: unihub.id,
-      entry: unihub.entry,
+      entry: getEntry(unihub.entry),
 
       // 可继承字段
       name: unihub.name || pkg.name,
