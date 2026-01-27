@@ -1,7 +1,40 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-01-27T15:00:00Z",
+  "lastUpdated": "2025-01-27T16:00:00Z",
   "plugins": [
+    {
+      "id": "com.unihub.password-manager",
+      "name": "密码管理器",
+      "version": "1.0.0",
+      "description": "密码管理器 - 安全存储和管理密码，支持密码生成和分类管理",
+      "author": {
+        "name": "UniHub Team",
+        "email": "team@unihub.dev",
+        "url": "https://github.com/unihub"
+      },
+      "icon": "https://api.iconify.design/fluent-emoji/locked-with-key.svg",
+      "category": "tool",
+      "keywords": [
+        "password",
+        "manager",
+        "security",
+        "encryption",
+        "密码管理",
+        "密码生成器",
+        "安全"
+      ],
+      "permissions": ["clipboard", "storage"],
+      "install": {
+        "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/password-manager/plugin.zip"
+      },
+      "homepage": "https://github.com/t8y2",
+      "repository": "https://github.com/t8y2/unihub",
+      "screenshots": [],
+      "downloads": 0,
+      "rating": 5.0,
+      "createdAt": "2025-01-27T16:00:00Z",
+      "updatedAt": "2025-01-27T16:00:00Z"
+    },
     {
       "id": "com.unihub.color-picker",
       "name": "取色器",
