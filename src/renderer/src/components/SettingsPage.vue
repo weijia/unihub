@@ -109,7 +109,16 @@ const loadSettings = async (): Promise<void> => {
 const loadInstalledPlugins = async (): Promise<void> => {
   try {
     const plugins = await window.api.plugin.list()
-    installedPlugins.value = (plugins as InstalledPlugin[]).filter((plugin) => plugin.enabled)
+    installedPlugins.value = plugins
+      .filter((plugin) => plugin.enabled)
+      .map((plugin) => ({
+        id: plugin.id,
+        enabled: plugin.enabled,
+        metadata: {
+          name: plugin.name,
+          icon: plugin.icon
+        }
+      }))
     if (
       selectedPluginId.value &&
       !installedPlugins.value.some((plugin) => plugin.id === selectedPluginId.value)
@@ -237,6 +246,7 @@ const saveGeneralSetting = async <K extends keyof Settings['general']>(
     console.log('保存通用设置', key, value)
     await window.api.settings.update({
       general: {
+        ...settings.value.general,
         [key]: value
       }
     })
