@@ -64,6 +64,20 @@
 
 ## 快速开始
 
+### 克隆项目
+
+```bash
+# 克隆主仓库（包含官方插件 submodule）
+git clone --recurse-submodules https://github.com/t8y2/unihub.git
+
+# 或者已经克隆了主仓库，再初始化 submodule
+git clone https://github.com/t8y2/unihub.git
+cd unihub
+git submodule update --init --recursive
+```
+
+### 开发和构建
+
 ```bash
 # 安装依赖
 pnpm install
@@ -82,11 +96,23 @@ pnpm build:linux        # Linux
 
 ### 官方插件仓库
 
-官方插件已迁移到独立仓库进行管理：
+官方插件已迁移到独立仓库进行管理（通过 Git Submodule 集成）：
 
 - **插件仓库**: [unihub-plugins](https://github.com/t8y2/unihub-plugins)
-- **插件市场**: 自动同步到本仓库的 `marketplace/plugins.json`
-- **架构说明**: 查看 [PLUGIN_REPOSITORY.md](./PLUGIN_REPOSITORY.md)
+- **本地路径**: `official-plugins/` (Git Submodule)
+- **插件市场**: 自动同步到 `marketplace/plugins.json`
+
+#### 更新官方插件
+
+```bash
+# 更新 submodule 到最新版本
+cd official-plugins
+git pull origin main
+cd ..
+git add official-plugins
+git commit -m "Update official-plugins submodule"
+git push
+```
 
 ### 快速开发
 

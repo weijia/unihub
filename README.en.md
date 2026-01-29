@@ -64,6 +64,20 @@ Join UniHub community to discuss and share with other developers!
 
 ## Quick Start
 
+### Clone the Project
+
+```bash
+# Clone the main repository (including official plugins submodule)
+git clone --recurse-submodules https://github.com/t8y2/unihub.git
+
+# Or if you've already cloned the main repository, initialize the submodule
+git clone https://github.com/t8y2/unihub.git
+cd unihub
+git submodule update --init --recursive
+```
+
+### Development and Build
+
 ```bash
 # Install dependencies
 pnpm install
@@ -79,6 +93,28 @@ pnpm build:linux        # Linux
 ```
 
 ## Plugin Development
+
+### Official Plugin Repository
+
+Official plugins have been migrated to a separate repository (integrated via Git Submodule):
+
+- **Plugin Repository**: [unihub-plugins](https://github.com/t8y2/unihub-plugins)
+- **Local Path**: `official-plugins/` (Git Submodule)
+- **Plugin Marketplace**: Auto-synced to `marketplace/plugins.json`
+
+#### Update Official Plugins
+
+```bash
+# Update submodule to the latest version
+cd official-plugins
+git pull origin main
+cd ..
+git add official-plugins
+git commit -m "Update official-plugins submodule"
+git push
+```
+
+### Quick Development
 
 Use the official CLI tool to quickly develop plugins:
 
@@ -97,7 +133,7 @@ uhp dev
 uhp package
 ```
 
-The generated `plugin.zip` can be directly dragged to UniHub for installation, or submit a PR to `marketplace/plugins.json` to publish to the plugin marketplace.
+The generated `plugin.zip` can be directly dragged to UniHub for installation, or submit a PR to the [plugin repository](https://github.com/t8y2/unihub-plugins) to publish to the plugin marketplace.
 
 Full documentation: [Plugin CLI](tools/plugin-cli/README.md) | Examples: [examples/](examples/)
 
