@@ -1,5 +1,13 @@
 import './style.css'
 
+// 引入浏览器 polyfill
+import { initBrowserPolyfill } from './utils/browser-polyfill'
+
+// 初始化浏览器 polyfill（仅在浏览器环境中执行）
+if (typeof window !== 'undefined' && !window.electron) {
+  initBrowserPolyfill()
+}
+
 import { createApp } from 'vue'
 import App from './App.vue'
 import SearchWindow from './pages/SearchWindow.vue'

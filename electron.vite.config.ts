@@ -4,8 +4,11 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import pkg from './package.json'
 
+// 检查是否是 Web 构建
+const isWebBuild = true // 暂时默认启用 Web 构建
+
 export default defineConfig({
-  main: {
+  main: !isWebBuild ? {
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
@@ -20,8 +23,8 @@ export default defineConfig({
       reportCompressedSize: false, // 禁用压缩大小报告，加快构建
       chunkSizeWarningLimit: 2000
     }
-  },
-  preload: {
+  } : undefined,
+  preload: !isWebBuild ? {
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
@@ -34,7 +37,7 @@ export default defineConfig({
       reportCompressedSize: false
       // preload 必须使用 node target，不能设置为 chrome
     }
-  },
+  } : undefined,
   renderer: {
     root: './src/renderer',
     resolve: {
@@ -45,10 +48,13 @@ export default defineConfig({
       }
     },
     define: {
-      __APP_VERSION__: JSON.stringify(pkg.version)
+      __APP_VERSION__: JSON.stringify(pkg.version),
+      // 定义构建目标
+      __BUILD_TARGET__: JSON.stringify(isWebBuild ? 'web' : 'electron')
     },
     plugins: [vue(), tailwindcss()],
     build: {
+      outDir: isWebBuild ? resolve(__dirname, 'dist/web') : undefined,
       rollupOptions: {
         input: {
           index: resolve(__dirname, 'src/renderer/index.html')
@@ -119,7 +125,7 @@ export default defineConfig({
       },
       // 性能优化
       minify: 'esbuild',
-      target: 'chrome120',
+      target: isWebBuild ? 'es2015' : 'chrome120',
       cssCodeSplit: true,
       chunkSizeWarningLimit: 1500,
       reportCompressedSize: false, // 禁用压缩大小报告
@@ -130,6 +136,7 @@ export default defineConfig({
     },
     // 开发服务器优化
     server: {
+      port: isWebBuild ? 3000 : undefined,
       hmr: {
         overlay: false
       },
