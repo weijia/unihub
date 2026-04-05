@@ -51,4 +51,5 @@ jobs:
           WEBDAV_USERNAME: ${{ secrets.WEBDAV_USERNAME }}
           WEBDAV_PASSWORD: ${{ secrets.WEBDAV_PASSWORD }}
           WEBDAV_ROOT: ${{ secrets.WEBDAV_ROOT }}
+          DEBUG: true
         run: node scripts/upload-to-webdav.js
