@@ -6,6 +6,19 @@ import { initBrowserPolyfill } from './utils/browser-polyfill'
 // 初始化浏览器 polyfill（仅在浏览器环境中执行）
 if (typeof window !== 'undefined' && !window.electron) {
   initBrowserPolyfill()
+  
+  // 注册 Service Worker（PWA 支持）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('Service Worker 注册成功:', registration.scope)
+        })
+        .catch(error => {
+          console.error('Service Worker 注册失败:', error)
+        })
+    })
+  }
 }
 
 import { createApp } from 'vue'

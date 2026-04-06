@@ -27,7 +27,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "sync-plugins": "node scripts/sync-plugins-from-remote.mjs",
     "dev:web": "set BUILD_TARGET=web && npx electron-vite dev",
-    "build:web": "set BUILD_TARGET=web && npx electron-vite build",
+    "build:web": "set BUILD_TARGET=web && npx vite build --config vite.config.ts",
     "preview:web": "npx vite preview --config vite.config.ts"
   },
   "dependencies": {
@@ -82,6 +82,7 @@
     "typescript": "^5.9.3",
     "util": "^0.12.5",
     "vite": "^7.2.6",
+    "vite-plugin-pwa": "^1.2.0",
     "vue": "^3.5.25",
     "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.1.6",
