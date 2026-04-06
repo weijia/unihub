@@ -1,6 +1,8 @@
 import { pluginRegistry } from './registry'
 import { builtinPlugins } from './builtin'
+import { webPlugins } from './web-plugins'
 import { searchEngine } from '@/utils/search'
+import { isBrowser } from '@/utils/plugin-adapter'
 
 // 初始化插件系统
 export function initPlugins(): void {
@@ -10,6 +12,14 @@ export function initPlugins(): void {
   builtinPlugins.forEach((plugin) => {
     pluginRegistry.register(plugin)
   })
+
+  // 在浏览器环境中注册 Web 版插件
+  if (isBrowser) {
+    console.log('🔧 浏览器环境，加载 Web 版插件')
+    webPlugins.forEach((plugin) => {
+      pluginRegistry.register(plugin)
+    })
+  }
 
   // 从 localStorage 恢复插件状态
   pluginRegistry.loadFromLocalStorage()
