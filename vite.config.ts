@@ -7,6 +7,7 @@ import pkg from './package.json'
 
 export default defineConfig({
   root: './src/renderer',
+  base: './',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src/renderer/src'),
@@ -26,7 +27,7 @@ export default defineConfig({
       short_name: 'UniHub',
       description: '多功能工具集合',
       theme_color: '#3b82f6',
-      start_url: '/',
+      start_url: './',
       display: 'standalone',
       background_color: '#ffffff',
       icons: [
