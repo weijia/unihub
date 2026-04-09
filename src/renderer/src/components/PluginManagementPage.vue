@@ -2,10 +2,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { pluginRegistry } from '@/plugins'
 import { pluginInstaller } from '@/plugins/marketplace/installer'
+import { npmPluginManager } from '@/plugins/npm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PluginIcon } from '@/components/ui/plugin-icon'
 import { toast } from 'vue-sonner'
 import {
@@ -19,6 +21,7 @@ import {
 import PluginDevMode from './PluginDevMode.vue'
 import PluginStore from './PluginStore.vue'
 import { CATEGORY_NAMES, MARKETPLACE_URL } from '@/constants'
+import { isBrowser } from '@/utils/plugin-adapter'
 
 type ActiveTab = 'store' | 'installed' | 'install'
 
@@ -33,6 +36,12 @@ const fileInput = ref<HTMLInputElement>()
 const showUninstallDialog = ref(false)
 const pluginToUninstall = ref<{ id: string; name: string } | null>(null)
 const refreshKey = ref(0)
+
+// npm plugin install state
+const npmPackageName = ref('')
+const npmPackageVersion = ref('')
+const npmCdn = ref<'esm.sh' | 'unpkg.com' | 'jsdelivr.net'>('esm.sh')
+const installingNpm = ref(false)
 
 // 事件处理器引用
 let pluginEventHandler: (() => void) | null = null
@@ -327,6 +336,53 @@ const uninstallPlugin = async (): Promise<void> => {
     pluginToUninstall.value = null
   }
 }
+
+// Install npm plugin
+const installNpmPlugin = async (): Promise<void> => {
+  if (!npmPackageName.value.trim()) {
+    toast.error('请输入 npm 包名')
+    return
+  }
+
+  installingNpm.value = true
+  try {
+    await npmPluginManager.installPlugin({
+      packageName: npmPackageName.value.trim(),
+      version: npmPackageVersion.value.trim() || undefined,
+      cdn: npmCdn.value
+    })
+    toast.success('npm 插件安装成功！')
+    npmPackageName.value = ''
+    npmPackageVersion.value = ''
+    refreshKey.value++
+    window.dispatchEvent(new CustomEvent('plugin-installed'))
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : 'npm 插件安装失败')
+  } finally {
+    installingNpm.value = false
+  }
+}
+
+// Uninstall npm plugin
+const uninstallNpmPlugin = (pluginId: string, pluginName: string): void => {
+  pluginToUninstall.value = { id: pluginId, name: pluginName }
+  showUninstallDialog.value = true
+}
+
+const confirmUninstallNpm = async (): Promise<void> => {
+  if (!pluginToUninstall.value) return
+  try {
+    npmPluginManager.uninstallPlugin(pluginToUninstall.value.id)
+    toast.success('npm 插件已卸载')
+    refreshKey.value++
+    window.dispatchEvent(new CustomEvent('plugin-uninstalled'))
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : '卸载失败')
+  } finally {
+    showUninstallDialog.value = false
+    pluginToUninstall.value = null
+  }
+}
 </script>
 
 <template>
@@ -531,7 +587,46 @@ const uninstallPlugin = async (): Promise<void> => {
 
       <!-- 手动安装标签页 -->
       <div v-show="activeTab === 'install'" class="space-y-3 p-4">
-        <!-- 从 URL 安装 -->
+        <!-- 从 npm 安装（仅浏览器模式） -->
+        <div v-if="isBrowser" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">从 npm 安装插件</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            输入 npm 包名安装 ESM 格式的 UniHub 插件
+          </p>
+          <div class="space-y-3">
+            <div class="flex gap-3">
+              <Input
+                v-model="npmPackageName"
+                placeholder="npm 包名，例如 unihub-plugin-demo"
+                class="flex-1"
+                :disabled="installingNpm"
+              />
+              <Input
+                v-model="npmPackageVersion"
+                placeholder="版本（可选）"
+                class="w-32"
+                :disabled="installingNpm"
+              />
+            </div>
+            <div class="flex gap-3">
+              <Select v-model="npmCdn" :disabled="installingNpm">
+                <SelectTrigger class="w-40">
+                  <SelectValue placeholder="选择 CDN" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="esm.sh">esm.sh</SelectItem>
+                  <SelectItem value="unpkg.com">unpkg.com</SelectItem>
+                  <SelectItem value="jsdelivr.net">jsdelivr.net</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button :disabled="installingNpm || !npmPackageName.trim()" @click="installNpmPlugin">
+                {{ installingNpm ? '安装中...' : '从 npm 安装' }}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 从 URL / ZIP 安装 -->
         <div
           class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
         >
@@ -614,7 +709,7 @@ const uninstallPlugin = async (): Promise<void> => {
 
         <DialogFooter>
           <Button variant="outline" @click="showUninstallDialog = false">取消</Button>
-          <Button variant="destructive" @click="uninstallPlugin">确认卸载</Button>
+          <Button variant="destructive" @click="isBrowser ? confirmUninstallNpm() : uninstallPlugin()">确认卸载</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

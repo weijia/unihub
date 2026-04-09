@@ -1,11 +1,12 @@
 import { pluginRegistry } from './registry'
 import { builtinPlugins } from './builtin'
 import { webPlugins } from './web-plugins'
+import { npmPluginManager } from './npm'
 import { searchEngine } from '@/utils/search'
 import { isBrowser } from '@/utils/plugin-adapter'
 
 // 初始化插件系统
-export function initPlugins(): void {
+export async function initPlugins(): Promise<void> {
   const startTime = performance.now()
 
   // 注册所有内置插件
@@ -19,6 +20,9 @@ export function initPlugins(): void {
     webPlugins.forEach((plugin) => {
       pluginRegistry.register(plugin)
     })
+
+    console.log('🔧 加载 npm 插件')
+    await npmPluginManager.loadSavedPlugins()
   }
 
   // 从 localStorage 恢复插件状态

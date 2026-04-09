@@ -38,7 +38,11 @@ console.log('[main.ts] isSearchWindow:', isSearchWindow)
 const app = createApp(isSearchWindow ? SearchWindow : App)
 
 // 初始化插件系统
-initPlugins()
+initPlugins().then(() => {
+  console.log('✅ 插件系统初始化完成（异步）')
+}).catch((err) => {
+  console.error('❌ 插件系统初始化失败:', err)
+})
 
 // 加载已安装的插件
 pluginInstaller.loadInstalledPlugins().catch((error) => {
