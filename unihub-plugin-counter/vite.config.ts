@@ -6,6 +6,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: false
+    sourcemap: false,
+    lib: {
+      entry: 'src/index.ts',
+      formats: ['es'],
+      fileName: 'index'
+    },
+    rollupOptions: {
+      external: ['vue'],
+      output: {
+        globals: {
+          vue: 'Vue'
+        }
+      }
+    }
   }
 })
