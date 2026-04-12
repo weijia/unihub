@@ -38,6 +38,7 @@
     "bindings": "^1.5.0",
     "file-icon": "^6.0.0",
     "get-installed-apps": "^1.1.1",
+    "jszip": "^3.10.1",
     "lmdb": "^3.4.4",
     "monaco-editor": "^0.55.1",
     "pino": "^10.1.0",

@@ -1,4 +1,5 @@
 // Browser polyfill for Electron API
+import JSZip from 'jszip'
 
 // 模拟 electronAPI
 export const electronAPI = {
@@ -36,17 +37,25 @@ export const api = {
         }
         console.log('[Browser Polyfill] 下载成功:', response.status);
         
-        // 模拟安装成功，将插件信息存储到 localStorage
-        const pluginId = 'plugin_' + Date.now();
+        // 读取响应为 ArrayBuffer
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = new Uint8Array(arrayBuffer);
+        
+        // 解压并解析插件包
+        const pluginInfo = await extractPluginInfo(buffer, url);
+        
+        // 存储插件信息到 localStorage
+        const pluginId = pluginInfo.id || 'plugin_' + Date.now();
         const plugins = JSON.parse(localStorage.getItem('unihub_plugins') || '[]');
         plugins.push({
           id: pluginId,
           url: url,
+          metadata: pluginInfo.metadata,
           installedAt: new Date().toISOString()
         });
         localStorage.setItem('unihub_plugins', JSON.stringify(plugins));
         
-        return { success: true, pluginId };
+        return { success: true, pluginId, metadata: pluginInfo.metadata };
       } catch (error) {
         console.error('[Browser Polyfill] 下载失败:', error);
         return { success: false, message: error instanceof Error ? error.message : '下载失败' };
@@ -55,17 +64,21 @@ export const api = {
     installFromBuffer: async (buffer: number[], filename: string) => {
       console.log('[Browser Polyfill] plugin.installFromBuffer:', filename);
       try {
-        // 模拟从文件安装，将插件信息存储到 localStorage
-        const pluginId = 'plugin_' + Date.now();
+        // 解压并解析插件包
+        const pluginInfo = await extractPluginInfo(buffer, filename);
+        
+        // 存储插件信息到 localStorage
+        const pluginId = pluginInfo.id || 'plugin_' + Date.now();
         const plugins = JSON.parse(localStorage.getItem('unihub_plugins') || '[]');
         plugins.push({
           id: pluginId,
           filename: filename,
+          metadata: pluginInfo.metadata,
           installedAt: new Date().toISOString()
         });
         localStorage.setItem('unihub_plugins', JSON.stringify(plugins));
         
-        return { success: true, pluginId };
+        return { success: true, pluginId, metadata: pluginInfo.metadata };
       } catch (error) {
         console.error('[Browser Polyfill] 安装失败:', error);
         return { success: false, message: error instanceof Error ? error.message : '安装失败' };
@@ -93,7 +106,7 @@ export const api = {
         return plugins.map((p: any) => ({
           id: p.id,
           enabled: true,
-          metadata: {
+          metadata: p.metadata || {
             id: p.id,
             name: p.filename || p.url.split('/').pop()?.replace('.zip', '') || 'Unknown Plugin',
             description: 'Installed from ' + (p.url || 'local file'),
@@ -868,6 +881,111 @@ export const versions = {
   electron: 'browser',
   node: 'browser',
   chrome: 'browser'
+}
+
+// 解压并解析插件包
+async function extractPluginInfo(buffer: Uint8Array | number[], source: string): Promise<{ id: string; metadata: any }> {
+  console.log('[Browser Polyfill] 开始解压插件包:', source);
+  try {
+    // 创建 JSZip 实例
+    const zip = new JSZip();
+    
+    // 加载 zip 数据
+    const loadedZip = await zip.loadAsync(buffer);
+    console.log('[Browser Polyfill] 解压成功，文件数量:', Object.keys(loadedZip.files).length);
+    
+    // 查找 package.json 文件
+    let packageJsonContent: string | null = null;
+    let entryFileContent: string | null = null;
+    
+    // 遍历所有文件
+    for (const [path, file] of Object.entries(loadedZip.files)) {
+      // 类型断言
+      const zipFile = file as any;
+      if (!zipFile.dir) {
+        console.log('[Browser Polyfill] 发现文件:', path);
+        
+        // 读取 package.json
+        if (path === 'package.json') {
+          packageJsonContent = await zipFile.async('string');
+          console.log('[Browser Polyfill] 读取 package.json 成功');
+        }
+        
+        // 读取入口文件（index.js 或 main.js）
+        if (path === 'dist/index.js' || path === 'index.js' || path === 'main.js') {
+          entryFileContent = await zipFile.async('string');
+          console.log('[Browser Polyfill] 读取入口文件成功:', path);
+        }
+      }
+    }
+    
+    // 解析 package.json
+    let packageJson: any = null;
+    if (packageJsonContent) {
+      try {
+        packageJson = JSON.parse(packageJsonContent);
+        console.log('[Browser Polyfill] 解析 package.json 成功:', packageJson.name);
+      } catch (error) {
+        console.error('[Browser Polyfill] 解析 package.json 失败:', error);
+      }
+    }
+    
+    // 从入口文件中提取 metadata
+    let metadata: any = null;
+    if (entryFileContent) {
+      try {
+        // 尝试从入口文件中提取 metadata
+        // 简单的正则表达式匹配
+        const metadataMatch = entryFileContent.match(/metadata:\s*{[\s\S]*?}/);
+        if (metadataMatch) {
+          // 提取 metadata 对象
+          const metadataStr = metadataMatch[0].replace('metadata:', '');
+          // 尝试解析为 JSON
+          try {
+            metadata = JSON.parse(metadataStr);
+            console.log('[Browser Polyfill] 从入口文件提取 metadata 成功');
+          } catch (error) {
+            console.error('[Browser Polyfill] 解析 metadata 失败:', error);
+          }
+        }
+      } catch (error) {
+        console.error('[Browser Polyfill] 从入口文件提取 metadata 失败:', error);
+      }
+    }
+    
+    // 构建插件信息
+    const pluginId = (metadata?.id || packageJson?.name || 'plugin_' + Date.now()) as string;
+    const pluginMetadata = {
+      id: pluginId,
+      name: (metadata?.name || packageJson?.name || source.split('/').pop()?.replace('.zip', '') || 'Unknown Plugin') as string,
+      description: (metadata?.description || packageJson?.description || 'Installed from ' + source) as string,
+      version: (metadata?.version || packageJson?.version || '1.0.0') as string,
+      author: (metadata?.author || packageJson?.author || 'Unknown') as string,
+      icon: (metadata?.icon || 'M12 4v16m8-8H4') as string,
+      category: (metadata?.category || 'custom') as string,
+      keywords: (metadata?.keywords || packageJson?.keywords || []) as string[]
+    };
+    
+    console.log('[Browser Polyfill] 插件信息提取成功:', pluginMetadata);
+    return { id: pluginId, metadata: pluginMetadata };
+  } catch (error) {
+    console.error('[Browser Polyfill] 解压和解析插件包失败:', error);
+    // 返回默认值
+    const defaultId = 'plugin_' + Date.now();
+    return {
+      id: defaultId,
+      metadata: {
+        id: defaultId,
+        name: source.split('/').pop()?.replace('.zip', '') || 'Unknown Plugin',
+        description: 'Installed from ' + source,
+        version: '1.0.0',
+        author: 'Unknown',
+        icon: 'M12 4v16m8-8H4',
+        category: 'custom',
+        keywords: []
+      }
+    };
+  }
 }
 
 // 暴露到全局对象
