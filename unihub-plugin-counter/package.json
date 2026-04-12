@@ -26,5 +26,15 @@
     "counter"
   ],
   "author": "UniHub Team",
-  "license": "MIT"
+  "license": "MIT",
+  "unihub": {
+    "id": "counter-plugin",
+    "name": "计数器",
+    "description": "一个简单的计数器插件",
+    "version": "1.0.0",
+    "author": "UniHub Team",
+    "icon": "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
+    "category": "tool",
+    "keywords": ["counter", "demo"]
+  }
 }

@@ -432,8 +432,7 @@ const tabs = ref<Tab[]>([])
 const activeTabId = ref('')
 const tabBarRef = ref<HTMLElement | null>(null)
 
-// 插件计数器
-const count = ref(0)
+
 
 // 滚动标签栏到激活的标签
 const scrollToActiveTab = (tabId: string, isNew: boolean): void => {
@@ -1164,23 +1163,11 @@ const addHomeTab = (): void => {
             <div v-else class="flex-1 flex items-center justify-center border-2 border-green-500 p-4">
               <template v-if="pluginRegistry.get(tab.pluginId)?.component">
                 <div class="w-full h-full">
-                  <!-- 直接渲染插件内容，不使用component标签 -->
-                  <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px; border: 1px solid red;">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginRegistry.get(tab.pluginId)?.metadata.name }}</h2>
-                    <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px; border: 1px solid blue;">
-                      <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
-                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ tab.pluginId }}</p>
-                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginRegistry.get(tab.pluginId)?.metadata.version }}</p>
-                      <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">计数器插件</h3>
-                        <div class="flex items-center gap-4">
-                          <button @click="count--" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button>
-                          <span class="text-xl font-semibold">{{ count }}</span>
-                          <button @click="count++" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <!-- 使用动态组件渲染插件内容 -->
+                  <component
+                    :is="pluginRegistry.get(tab.pluginId)?.component"
+                    class="w-full h-full"
+                  />
                 </div>
               </template>
               <div v-else class="text-center text-red-500">
