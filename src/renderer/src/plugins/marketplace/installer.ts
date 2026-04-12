@@ -219,7 +219,8 @@ export class PluginInstaller {
         if (isBrowser) {
           // 浏览器环境：直接渲染插件内容
           console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
-          component = markRaw({
+          // 不使用 markRaw，确保组件能正确渲染
+          component = {
             template: `
               <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px; border: 1px solid red;">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
@@ -255,10 +256,13 @@ export class PluginInstaller {
             mounted() {
               console.log('🔧 [Installer] 浏览器插件组件 mounted:', this.pluginId)
               // 调试容器大小
-              const container = this.$el
-              console.log('🔧 [Installer] 插件容器大小:', {
-                width: container.clientWidth,
-                height: container.clientHeight
+              this.$nextTick(() => {
+                const container = this.$el
+                console.log('🔧 [Installer] 插件容器大小:', {
+                  width: container.clientWidth,
+                  height: container.clientHeight
+                })
+                console.log('🔧 [Installer] 插件容器 DOM:', container)
               })
             },
             updated() {
@@ -267,7 +271,7 @@ export class PluginInstaller {
             beforeUnmount() {
               console.log('🔧 [Installer] 浏览器插件组件 beforeUnmount:', this.pluginId)
             }
-          })
+          }
         } else {
           // Electron 环境：使用 WebContentsView
           console.log('🔧 [Installer] 创建 Electron 环境插件组件:', metadata.name as string)
@@ -384,6 +388,7 @@ export class PluginInstaller {
         }
         
         console.log('🔧 [Installer] 插件组件创建完成:', metadata.name as string)
+        console.log('🔧 [Installer] 插件组件类型:', typeof component)
         
         const plugin = {
           metadata: {
