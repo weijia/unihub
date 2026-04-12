@@ -1158,12 +1158,17 @@ const addHomeTab = (): void => {
             <WebNavigator v-else-if="tab.type === 'web-navigator'" />
 
             <!-- 普通插件 - 无背景，让插件自己控制样式 -->
-            <component
-              :is="pluginRegistry.get(tab.pluginId)?.component"
-              v-else
-              v-bind="pluginRegistry.get(tab.pluginId)?.config || {}"
-              class="flex-1"
-            />
+            <div v-else class="flex-1 flex items-center justify-center border-2 border-green-500 p-4">
+              <component
+                :is="pluginRegistry.get(tab.pluginId)?.component"
+                v-bind="pluginRegistry.get(tab.pluginId)?.config || {}"
+                class="w-full h-full"
+              />
+              <div v-if="!pluginRegistry.get(tab.pluginId)?.component" class="text-center text-red-500">
+                <p>插件组件未找到</p>
+                <p>Plugin ID: {{ tab.pluginId }}</p>
+              </div>
+            </div>
           </div>
         </template>
       </div>
