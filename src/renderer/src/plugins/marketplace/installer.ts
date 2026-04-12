@@ -214,8 +214,11 @@ export class PluginInstaller {
         // 创建插件组件（根据环境选择不同的渲染方式）
         let component: Component
         
+        console.log('🔧 [Installer] 环境检测:', { isBrowser: isBrowser, pluginId: metadata.id as string })
+        
         if (isBrowser) {
           // 浏览器环境：直接渲染插件内容
+          console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
           component = markRaw({
             template: `
               <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4">
@@ -236,16 +239,31 @@ export class PluginInstaller {
               </div>
             `,
             data() {
+              console.log('🔧 [Installer] 浏览器插件组件 data 初始化:', {
+                pluginName: metadata.name as string,
+                pluginId: metadata.id as string,
+                pluginVersion: metadata.version as string
+              })
               return {
                 pluginName: metadata.name as string,
                 pluginId: metadata.id as string,
                 pluginVersion: metadata.version as string,
                 count: 0
               }
+            },
+            mounted() {
+              console.log('🔧 [Installer] 浏览器插件组件 mounted:', this.pluginId)
+            },
+            updated() {
+              console.log('🔧 [Installer] 浏览器插件组件 updated:', this.pluginId)
+            },
+            beforeUnmount() {
+              console.log('🔧 [Installer] 浏览器插件组件 beforeUnmount:', this.pluginId)
             }
           })
         } else {
           // Electron 环境：使用 WebContentsView
+          console.log('🔧 [Installer] 创建 Electron 环境插件组件:', metadata.name as string)
           component = markRaw({
             template: `
               <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900">
@@ -358,6 +376,8 @@ export class PluginInstaller {
           })
         }
         
+        console.log('🔧 [Installer] 插件组件创建完成:', metadata.name as string)
+        
         const plugin = {
           metadata: {
             id: metadata.id as string,
@@ -376,13 +396,17 @@ export class PluginInstaller {
         }
 
         pluginsToRegister.push(plugin)
+        console.log('🔧 [Installer] 插件添加到注册列表:', plugin.metadata.name)
       }
 
+      console.log('🔧 [Installer] 准备批量注册插件，数量:', pluginsToRegister.length)
       // 批量注册（减少响应式更新）
       pluginsToRegister.forEach((plugin) => {
+        console.log('🔧 [Installer] 注册插件:', plugin.metadata.name, plugin.metadata.id)
         pluginRegistry.register(plugin)
         console.log('✅ 已加载插件:', plugin.metadata.name)
       })
+      console.log('🔧 [Installer] 插件注册完成')
     } catch (error) {
       console.error('加载插件列表失败:', error)
     }
