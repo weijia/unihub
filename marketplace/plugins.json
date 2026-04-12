@@ -23,7 +23,10 @@
         "密码生成器",
         "安全"
       ],
-      "permissions": ["clipboard", "storage"],
+      "permissions": [
+        "clipboard",
+        "storage"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/password-manager/plugin.zip"
       },
@@ -58,7 +61,9 @@
         "颜色选择器",
         "屏幕取色"
       ],
-      "permissions": ["clipboard"],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/color-picker/plugin.zip"
       },
@@ -92,7 +97,9 @@
         "时间转换",
         "时间段"
       ],
-      "permissions": ["clipboard"],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/timestamp-tool/plugin.zip"
       },
@@ -116,8 +123,16 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-pdf2.svg",
       "category": "tool",
-      "keywords": ["pdf", "merge", "combine", "PDF合并", "文档处理"],
-      "permissions": ["clipboard"],
+      "keywords": [
+        "pdf",
+        "merge",
+        "combine",
+        "PDF合并",
+        "文档处理"
+      ],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/pdf-merger/plugin.zip"
       },
@@ -141,8 +156,17 @@
       },
       "icon": "https://api.iconify.design/mdi/image-size-select-actual.svg",
       "category": "tool",
-      "keywords": ["image", "compress", "resize", "webp", "图片压缩", "格式转换"],
-      "permissions": ["clipboard"],
+      "keywords": [
+        "image",
+        "compress",
+        "resize",
+        "webp",
+        "图片压缩",
+        "格式转换"
+      ],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/image-compressor/plugin.zip"
       },
@@ -158,7 +182,7 @@
       "id": "com.unihub.curl-converter",
       "name": "Win Curl 转换器",
       "version": "1.0.1",
-      "description": "Shell curl 命令转换为 Windows curl 格式 - 自动处理单引号转双引号、JSON 内双引号转��、换行符处理",
+      "description": "Shell curl 命令转换为 Windows curl 格式 - 自动处理单引号转双引号、JSON 内双引号转义、换行符处理",
       "author": {
         "name": "UniHub Team",
         "email": "team@unihub.dev",
@@ -166,8 +190,18 @@
       },
       "icon": "https://api.iconify.design/mdi/swap-horizontal.svg",
       "category": "tool",
-      "keywords": ["curl", "windows", "shell", "bash", "convert", "命令行", "转换"],
-      "permissions": ["clipboard"],
+      "keywords": [
+        "curl",
+        "windows",
+        "shell",
+        "bash",
+        "convert",
+        "命令行",
+        "转换"
+      ],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/curl-converter/plugin.zip"
       },
@@ -191,8 +225,19 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/shield.svg",
       "category": "tool",
-      "keywords": ["2fa", "totp", "otp", "auth", "authenticator", "验证码", "双因素认证"],
-      "permissions": ["clipboard", "storage"],
+      "keywords": [
+        "2fa",
+        "totp",
+        "otp",
+        "auth",
+        "authenticator",
+        "验证码",
+        "双因素认证"
+      ],
+      "permissions": [
+        "clipboard",
+        "storage"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/2fa-authenticator/plugin.zip"
       },
@@ -216,8 +261,18 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-diff.svg",
       "category": "tool",
-      "keywords": ["code", "diff", "compare", "monaco", "代码对比", "差异比较"],
-      "permissions": ["clipboard", "storage"],
+      "keywords": [
+        "code",
+        "diff",
+        "compare",
+        "monaco",
+        "代码对比",
+        "差异比较"
+      ],
+      "permissions": [
+        "clipboard",
+        "storage"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/code-diff/plugin.zip"
       },
@@ -241,8 +296,20 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-markdown.svg",
       "category": "tool",
-      "keywords": ["markdown", "editor", "preview", "latex", "mermaid", "编辑器", "预览", "文档"],
-      "permissions": ["clipboard", "storage"],
+      "keywords": [
+        "markdown",
+        "editor",
+        "preview",
+        "latex",
+        "mermaid",
+        "编辑器",
+        "预览",
+        "文档"
+      ],
+      "permissions": [
+        "clipboard",
+        "storage"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/markdown-editor/plugin.zip"
       },
@@ -266,8 +333,18 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/clipboard.svg",
       "category": "tool",
-      "keywords": ["clipboard", "history", "paste", "copy", "剪贴板", "历史记录"],
-      "permissions": ["clipboard", "storage"],
+      "keywords": [
+        "clipboard",
+        "history",
+        "paste",
+        "copy",
+        "剪贴板",
+        "历史记录"
+      ],
+      "permissions": [
+        "clipboard",
+        "storage"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/clipboard-history/plugin.zip"
       },
@@ -301,7 +378,10 @@
         "白板",
         "手绘"
       ],
-      "permissions": ["clipboard", "fs"],
+      "permissions": [
+        "clipboard",
+        "fs"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/excalidraw/plugin.zip"
       },
@@ -337,7 +417,11 @@
         "开发工具",
         "工具集"
       ],
-      "permissions": ["clipboard", "fs", "http"],
+      "permissions": [
+        "clipboard",
+        "fs",
+        "http"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/ctool/plugin.zip"
       },
@@ -361,8 +445,18 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/memo.svg",
       "category": "tool",
-      "keywords": ["todo", "todolist", "task", "gtd", "productivity", "待办", "任务管理"],
-      "permissions": ["storage"],
+      "keywords": [
+        "todo",
+        "todolist",
+        "task",
+        "gtd",
+        "productivity",
+        "待办",
+        "任务管理"
+      ],
+      "permissions": [
+        "storage"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/todolist/plugin.zip"
       },
@@ -378,7 +472,7 @@
       "id": "com.unihub.javascript-formatter",
       "name": "JavaScript 格式化",
       "version": "1.0.0",
-      "description": "JavaScript 代码��式化与压缩工具",
+      "description": "JavaScript 代码格式化与压缩工具",
       "author": {
         "name": "UniHub Team",
         "email": "team@unihub.dev",
@@ -386,8 +480,17 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-js-official.svg",
       "category": "formatter",
-      "keywords": ["javascript", "js", "format", "formatter", "prettier", "格式化"],
-      "permissions": ["clipboard"],
+      "keywords": [
+        "javascript",
+        "js",
+        "format",
+        "formatter",
+        "prettier",
+        "格式化"
+      ],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/javascript-formatter/plugin.zip"
       },
@@ -411,8 +514,18 @@
       },
       "icon": "https://api.iconify.design/twemoji/locked-with-key.svg",
       "category": "tool",
-      "keywords": ["jwt", "token", "auth", "encode", "decode", "verify", "认证"],
-      "permissions": ["clipboard"],
+      "keywords": [
+        "jwt",
+        "token",
+        "auth",
+        "encode",
+        "decode",
+        "verify",
+        "认证"
+      ],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/jwt-tool/plugin.zip"
       },
@@ -436,8 +549,18 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-html.svg",
       "category": "formatter",
-      "keywords": ["h5", "html", "formatter", "beautify", "minify", "格式化", "压缩"],
-      "permissions": ["clipboard"],
+      "keywords": [
+        "h5",
+        "html",
+        "formatter",
+        "beautify",
+        "minify",
+        "格式化",
+        "压缩"
+      ],
+      "permissions": [
+        "clipboard"
+      ],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/official-plugins/h5-formatter/plugin.zip"
       },
