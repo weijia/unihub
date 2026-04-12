@@ -182,7 +182,7 @@
       "id": "com.unihub.curl-converter",
       "name": "Win Curl 转换器",
       "version": "1.0.1",
-      "description": "Shell curl 命令转换为 Windows curl 格式 - 自动处理单引号转双引号、JSON 内双引号转义、换行符处理",
+      "description": "Shell curl 命令转换为 Windows curl 格式 - 自动处理单引号转双引号、JSON 内双引号转��、换行符处理",
       "author": {
         "name": "UniHub Team",
         "email": "team@unihub.dev",
@@ -472,7 +472,7 @@
       "id": "com.unihub.javascript-formatter",
       "name": "JavaScript 格式化",
       "version": "1.0.0",
-      "description": "JavaScript 代码格式化与压缩工具",
+      "description": "JavaScript 代码��式化与压缩工具",
       "author": {
         "name": "UniHub Team",
         "email": "team@unihub.dev",
