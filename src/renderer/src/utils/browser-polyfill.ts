@@ -51,11 +51,12 @@ export const api = {
           id: pluginId,
           url: url,
           metadata: pluginInfo.metadata,
+          entryContent: pluginInfo.entryContent,
           installedAt: new Date().toISOString()
         });
         localStorage.setItem('unihub_plugins', JSON.stringify(plugins));
         
-        return { success: true, pluginId, metadata: pluginInfo.metadata };
+        return { success: true, pluginId, metadata: pluginInfo.metadata, entryContent: pluginInfo.entryContent };
       } catch (error) {
         console.error('[Browser Polyfill] 下载失败:', error);
         return { success: false, message: error instanceof Error ? error.message : '下载失败' };
@@ -74,11 +75,12 @@ export const api = {
           id: pluginId,
           filename: filename,
           metadata: pluginInfo.metadata,
+          entryContent: pluginInfo.entryContent,
           installedAt: new Date().toISOString()
         });
         localStorage.setItem('unihub_plugins', JSON.stringify(plugins));
         
-        return { success: true, pluginId, metadata: pluginInfo.metadata };
+        return { success: true, pluginId, metadata: pluginInfo.metadata, entryContent: pluginInfo.entryContent };
       } catch (error) {
         console.error('[Browser Polyfill] 安装失败:', error);
         return { success: false, message: error instanceof Error ? error.message : '安装失败' };
@@ -115,7 +117,8 @@ export const api = {
             icon: 'M12 4v16m8-8H4',
             category: 'custom',
             keywords: []
-          }
+          },
+          entryContent: p.entryContent
         }));
       } catch (error) {
         console.error('[Browser Polyfill] 获取插件列表失败:', error);
@@ -884,7 +887,7 @@ export const versions = {
 }
 
 // 解压并解析插件包
-async function extractPluginInfo(buffer: Uint8Array | number[], source: string): Promise<{ id: string; metadata: any }> {
+async function extractPluginInfo(buffer: Uint8Array | number[], source: string): Promise<{ id: string; metadata: any; entryContent: string | null }> {
   console.log('[Browser Polyfill] 开始解压插件包:', source);
   try {
     // 创建 JSZip 实例
@@ -967,7 +970,7 @@ async function extractPluginInfo(buffer: Uint8Array | number[], source: string):
     };
     
     console.log('[Browser Polyfill] 插件信息提取成功:', pluginMetadata);
-    return { id: pluginId, metadata: pluginMetadata };
+    return { id: pluginId, metadata: pluginMetadata, entryContent: entryFileContent };
   } catch (error) {
     console.error('[Browser Polyfill] 解压和解析插件包失败:', error);
     // 返回默认值
@@ -983,7 +986,8 @@ async function extractPluginInfo(buffer: Uint8Array | number[], source: string):
         icon: 'M12 4v16m8-8H4',
         category: 'custom',
         keywords: []
-      }
+      },
+      entryContent: null
     };
   }
 }

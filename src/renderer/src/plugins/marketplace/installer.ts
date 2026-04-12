@@ -219,57 +219,132 @@ export class PluginInstaller {
         if (isBrowser) {
           // 浏览器环境：直接渲染插件内容
           console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
-          // 不使用 markRaw，确保组件能正确渲染
-          component = {
-            template: `
-              <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px; border: 1px solid red;">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
-                <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px; border: 1px solid blue;">
-                  <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
-                  <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
-                  <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
-                  <p class="text-gray-600 dark:text-gray-400 mt-2">计数器值: {{ count }}</p>
-                  <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">计数器插件</h3>
-                    <div class="flex items-center gap-4">
-                      <button @click="count--" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button>
-                      <span class="text-xl font-semibold">{{ count }}</span>
-                      <button @click="count++" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button>
+          
+          // 尝试从入口文件内容创建组件
+          if (pluginInfo.entryContent) {
+            console.log('🔧 [Installer] 尝试使用插件入口文件创建组件')
+            try {
+              // 解析入口文件内容，提取插件对象
+              const entryContent = pluginInfo.entryContent
+              
+              // 尝试使用 eval 执行入口文件内容
+              const module = { exports: {} }
+              const require = (name: string) => {
+                if (name === 'vue') {
+                  // 在浏览器环境中，Vue 应该已经在全局环境中可用
+                  if (window.Vue) {
+                    return window.Vue
+                  } else {
+                    throw new Error('Vue is not available in global scope')
+                  }
+                }
+                throw new Error(`Module ${name} not found`)
+              }
+              
+              // 创建一个安全的执行环境
+              const executeCode = new Function('module', 'exports', 'require', 'window', entryContent)
+              executeCode(module, module.exports, require, window)
+              
+              // 获取插件对象
+              const plugin = module.exports.default || module.exports
+              
+              if (plugin && plugin.component) {
+                console.log('🔧 [Installer] 成功从入口文件提取插件组件')
+                component = plugin.component
+              } else {
+                console.warn('🔧 [Installer] 从入口文件提取插件组件失败，使用默认组件')
+                // 使用默认组件
+                component = {
+                  template: `
+                    <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
+                      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
+                      <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
+                        <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
+                        <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
+                        <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
+                        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">计数器插件</h3>
+                          <div class="flex items-center gap-4">
+                            <button @click="count--" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button>
+                            <span class="text-xl font-semibold">{{ count }}</span>
+                            <button @click="count++" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  `,
+                  data() {
+                    return {
+                      pluginName: metadata.name as string,
+                      pluginId: metadata.id as string,
+                      pluginVersion: metadata.version as string,
+                      count: 0
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('🔧 [Installer] 执行插件入口文件失败:', error)
+              // 使用默认组件
+              component = {
+                template: `
+                  <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
+                    <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
+                      <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
+                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
+                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
+                      <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">计数器插件</h3>
+                        <div class="flex items-center gap-4">
+                          <button @click="count--" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button>
+                          <span class="text-xl font-semibold">{{ count }}</span>
+                          <button @click="count++" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `,
+                data() {
+                  return {
+                    pluginName: metadata.name as string,
+                    pluginId: metadata.id as string,
+                    pluginVersion: metadata.version as string,
+                    count: 0
+                  }
+                }
+              }
+            }
+          } else {
+            console.warn('🔧 [Installer] 插件入口文件内容不存在，使用默认组件')
+            // 使用默认组件
+            component = {
+              template: `
+                <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
+                  <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
+                    <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
+                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">计数器插件</h3>
+                      <div class="flex items-center gap-4">
+                        <button @click="count--" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button>
+                        <span class="text-xl font-semibold">{{ count }}</span>
+                        <button @click="count++" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            `,
-            data() {
-              console.log('🔧 [Installer] 浏览器插件组件 data 初始化:', {
-                pluginName: metadata.name as string,
-                pluginId: metadata.id as string,
-                pluginVersion: metadata.version as string
-              })
-              return {
-                pluginName: metadata.name as string,
-                pluginId: metadata.id as string,
-                pluginVersion: metadata.version as string,
-                count: 0
+              `,
+              data() {
+                return {
+                  pluginName: metadata.name as string,
+                  pluginId: metadata.id as string,
+                  pluginVersion: metadata.version as string,
+                  count: 0
+                }
               }
-            },
-            mounted() {
-              console.log('🔧 [Installer] 浏览器插件组件 mounted:', this.pluginId)
-              // 调试容器大小
-              this.$nextTick(() => {
-                const container = this.$el
-                console.log('🔧 [Installer] 插件容器大小:', {
-                  width: container.clientWidth,
-                  height: container.clientHeight
-                })
-                console.log('🔧 [Installer] 插件容器 DOM:', container)
-              })
-            },
-            updated() {
-              console.log('🔧 [Installer] 浏览器插件组件 updated:', this.pluginId)
-            },
-            beforeUnmount() {
-              console.log('🔧 [Installer] 浏览器插件组件 beforeUnmount:', this.pluginId)
             }
           }
         } else {
