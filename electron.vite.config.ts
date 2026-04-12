@@ -8,36 +8,40 @@ import pkg from './package.json'
 const isWebBuild = true // 暂时默认启用 Web 构建
 
 export default defineConfig({
-  main: !isWebBuild ? {
-    plugins: [externalizeDepsPlugin()],
-    build: {
-      rollupOptions: {
-        input: {
-          index: resolve(__dirname, 'src/main/index.ts')
+  main: !isWebBuild
+    ? {
+        plugins: [externalizeDepsPlugin()],
+        build: {
+          rollupOptions: {
+            input: {
+              index: resolve(__dirname, 'src/main/index.ts')
+            }
+            // 移除 external 配置，让依赖正常打包到 bundle 中
+          },
+          // 性能优化
+          minify: 'esbuild',
+          target: 'node18',
+          reportCompressedSize: false, // 禁用压缩大小报告，加快构建
+          chunkSizeWarningLimit: 2000
         }
-        // 移除 external 配置，让依赖正常打包到 bundle 中
-      },
-      // 性能优化
-      minify: 'esbuild',
-      target: 'node18',
-      reportCompressedSize: false, // 禁用压缩大小报告，加快构建
-      chunkSizeWarningLimit: 2000
-    }
-  } : undefined,
-  preload: !isWebBuild ? {
-    plugins: [externalizeDepsPlugin()],
-    build: {
-      rollupOptions: {
-        input: {
-          index: resolve(__dirname, 'src/preload/index.ts')
+      }
+    : undefined,
+  preload: !isWebBuild
+    ? {
+        plugins: [externalizeDepsPlugin()],
+        build: {
+          rollupOptions: {
+            input: {
+              index: resolve(__dirname, 'src/preload/index.ts')
+            }
+          },
+          // 性能优化
+          minify: 'esbuild',
+          reportCompressedSize: false
+          // preload 必须使用 node target，不能设置为 chrome
         }
-      },
-      // 性能优化
-      minify: 'esbuild',
-      reportCompressedSize: false
-      // preload 必须使用 node target，不能设置为 chrome
-    }
-  } : undefined,
+      }
+    : undefined,
   renderer: {
     root: './src/renderer',
     resolve: {

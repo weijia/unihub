@@ -10,12 +10,12 @@
 
 在 GitHub 和 Gitee 仓库中，需要设置以下 secrets：
 
-| Secret 名称 | 说明 | 示例 |
-|------------|------|------|
-| `WEBDAV_URL` | WebDAV 服务器 URL | `https://webdav.example.com` |
-| `WEBDAV_USERNAME` | WebDAV 用户名 | `username` |
-| `WEBDAV_PASSWORD` | WebDAV 密码 | `password` |
-| `WEBDAV_ROOT` | WebDAV 根路径（可选） | `my-app` |
+| Secret 名称       | 说明                  | 示例                         |
+| ----------------- | --------------------- | ---------------------------- |
+| `WEBDAV_URL`      | WebDAV 服务器 URL     | `https://webdav.example.com` |
+| `WEBDAV_USERNAME` | WebDAV 用户名         | `username`                   |
+| `WEBDAV_PASSWORD` | WebDAV 密码           | `password`                   |
+| `WEBDAV_ROOT`     | WebDAV 根路径（可选） | `my-app`                     |
 
 ### 2. 工作流程
 
@@ -77,6 +77,7 @@ node scripts/upload-to-webdav.js
 
 **原因**：WebDAV 服务器拒绝访问请求
 **解决方案**：
+
 - 检查 WebDAV 用户名和密码是否正确
 - 检查 WebDAV 服务器权限设置
 - 确保 WebDAV 服务器支持 PUT 和 MKCOL 请求
@@ -84,6 +85,7 @@ node scripts/upload-to-webdav.js
 ### 3. 上传失败
 
 **解决方案**：
+
 - 检查网络连接
 - 检查 WebDAV 服务器状态
 - 查看 GitHub/Gitee Actions 日志获取详细错误信息

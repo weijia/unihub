@@ -19,66 +19,77 @@ export default defineConfig({
     // 模拟 Electron 环境变量
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
-  plugins: [vue(), tailwindcss(), VitePWA({
-    registerType: 'autoUpdate',
-    includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-192x192.png', 'pwa-maskable-512x512.png', 'masked-icon.svg'],
-    manifest: {
-      name: 'UniHub',
-      short_name: 'UniHub',
-      description: '多功能工具集合',
-      theme_color: '#3b82f6',
-      start_url: './',
-      display: 'standalone',
-      background_color: '#ffffff',
-      icons: [
-        {
-          src: 'pwa-192x192.png',
-          sizes: '192x192',
-          type: 'image/png'
-        },
-        {
-          src: 'pwa-512x512.png',
-          sizes: '512x512',
-          type: 'image/png'
-        },
-        {
-          src: 'pwa-maskable-192x192.png',
-          sizes: '192x192',
-          type: 'image/png',
-          purpose: 'maskable'
-        },
-        {
-          src: 'pwa-maskable-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'maskable'
-        }
-      ]
-    },
-    workbox: {
-      globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-      maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/fonts\.googleapis\.com\//i,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'google-fonts-cache',
-            expiration: {
-              maxEntries: 10,
-              maxAgeSeconds: 60 * 60 * 24 * 365 // 1年
-            },
-            cacheableResponse: {
-              statuses: [0, 200]
+  plugins: [
+    vue(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'favicon.ico',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'pwa-maskable-192x192.png',
+        'pwa-maskable-512x512.png',
+        'masked-icon.svg'
+      ],
+      manifest: {
+        name: 'UniHub',
+        short_name: 'UniHub',
+        description: '多功能工具集合',
+        theme_color: '#3b82f6',
+        start_url: './',
+        display: 'standalone',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-maskable-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\//i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1年
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
             }
           }
-        }
-      ]
-    },
-    devOptions: {
-      enabled: true
-    }
-  })],
+        ]
+      },
+      devOptions: {
+        enabled: true
+      }
+    })
+  ],
   // PWA 相关配置
   publicDir: 'public',
   build: {

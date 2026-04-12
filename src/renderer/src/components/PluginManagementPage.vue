@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { PluginIcon } from '@/components/ui/plugin-icon'
 import { toast } from 'vue-sonner'
 import {
@@ -588,8 +594,13 @@ const confirmUninstallNpm = async (): Promise<void> => {
       <!-- 手动安装标签页 -->
       <div v-show="activeTab === 'install'" class="space-y-3 p-4">
         <!-- 从 npm 安装（仅浏览器模式） -->
-        <div v-if="isBrowser" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">从 npm 安装插件</h3>
+        <div
+          v-if="isBrowser"
+          class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            从 npm 安装插件
+          </h3>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
             输入 npm 包名安装 ESM 格式的 UniHub 插件
           </p>
@@ -709,7 +720,11 @@ const confirmUninstallNpm = async (): Promise<void> => {
 
         <DialogFooter>
           <Button variant="outline" @click="showUninstallDialog = false">取消</Button>
-          <Button variant="destructive" @click="isBrowser ? confirmUninstallNpm() : uninstallPlugin()">确认卸载</Button>
+          <Button
+            variant="destructive"
+            @click="isBrowser ? confirmUninstallNpm() : uninstallPlugin()"
+            >确认卸载</Button
+          >
         </DialogFooter>
       </DialogContent>
     </Dialog>

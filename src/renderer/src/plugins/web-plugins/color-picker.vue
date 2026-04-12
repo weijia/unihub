@@ -307,7 +307,10 @@ onMounted(() => {
                 <div class="text-xs font-semibold text-muted-foreground">
                   {{ format.label }}
                 </div>
-                <div class="w-full truncate font-mono text-xs font-medium text-foreground" :title="format.value">
+                <div
+                  class="w-full truncate font-mono text-xs font-medium text-foreground"
+                  :title="format.value"
+                >
                   {{ format.value }}
                 </div>
               </button>
@@ -327,7 +330,10 @@ onMounted(() => {
                 清空
               </button>
             </div>
-            <div v-if="colorHistory.length === 0" class="py-6 text-center text-xs text-muted-foreground">
+            <div
+              v-if="colorHistory.length === 0"
+              class="py-6 text-center text-xs text-muted-foreground"
+            >
               暂无历史记录
             </div>
             <div v-else class="grid grid-cols-6 gap-2">
@@ -338,8 +344,7 @@ onMounted(() => {
                 :style="{ backgroundColor: color }"
                 :title="color"
                 @click="selectFromHistory(color)"
-              >
-              </button>
+              ></button>
             </div>
           </section>
         </div>

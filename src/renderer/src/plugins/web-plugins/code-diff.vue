@@ -34,10 +34,10 @@ const languages = [
   { value: 'markdown', label: 'Markdown' },
   { value: 'sql', label: 'SQL' },
   { value: 'shell', label: 'Shell' },
-  { value: 'plaintext', label: 'Plain Text' },
+  { value: 'plaintext', label: 'Plain Text' }
 ]
 
-const currentLanguage = ref(languages.find(l => l.value === language.value) || languages[0])
+const currentLanguage = ref(languages.find((l) => l.value === language.value) || languages[0])
 
 // 初始化 Monaco Diff Editor
 function initDiffEditor() {
@@ -59,9 +59,9 @@ function initDiffEditor() {
       horizontal: 'auto',
       useShadows: false,
       verticalScrollbarSize: 10,
-      horizontalScrollbarSize: 10,
+      horizontalScrollbarSize: 10
     },
-    originalEditable: true,
+    originalEditable: true
   })
 
   updateDiffEditor()
@@ -76,12 +76,12 @@ function updateDiffEditor() {
 
   diffEditor.setModel({
     original: originalModel,
-    modified: modifiedModel,
+    modified: modifiedModel
   })
 }
 
 // 选择语言
-function selectLanguage(lang: typeof languages[0]) {
+function selectLanguage(lang: (typeof languages)[0]) {
   language.value = lang.value
   currentLanguage.value = lang
   showLanguageMenu.value = false
@@ -132,7 +132,7 @@ async function saveToStorage() {
       language: language.value,
       theme: theme.value,
       isDarkMode: isDarkMode.value,
-      renderSideBySide: renderSideBySide.value,
+      renderSideBySide: renderSideBySide.value
     }
     localStorage.setItem('code-diff-data', JSON.stringify(data))
   } catch (error) {
@@ -149,7 +149,7 @@ async function loadFromStorage() {
       originalCode.value = data.originalCode || ''
       modifiedCode.value = data.modifiedCode || ''
       language.value = data.language || 'javascript'
-      currentLanguage.value = languages.find(l => l.value === language.value) || languages[0]
+      currentLanguage.value = languages.find((l) => l.value === language.value) || languages[0]
       isDarkMode.value = data.isDarkMode !== false
       theme.value = isDarkMode.value ? 'vs-dark' : 'vs'
       renderSideBySide.value = data.renderSideBySide !== false
@@ -162,17 +162,17 @@ async function loadFromStorage() {
 onMounted(async () => {
   await loadFromStorage()
   initDiffEditor()
-  
+
   // 监听编辑器内容变化
   if (diffEditor) {
     const original = diffEditor.getOriginalEditor()
     const modified = diffEditor.getModifiedEditor()
-    
+
     original.onDidChangeModelContent(() => {
       originalCode.value = original.getValue()
       saveToStorage()
     })
-    
+
     modified.onDidChangeModelContent(() => {
       modifiedCode.value = modified.getValue()
       saveToStorage()
@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex flex-col h-screen" :class="isDarkMode ? 'bg-background' : 'bg-white'">
     <!-- Toolbar -->
-    <div 
+    <div
       class="flex items-center gap-3 px-4 py-2 border-b transition-colors"
       :class="isDarkMode ? 'bg-background border-border' : 'bg-white border-gray-200'"
     >
@@ -212,13 +212,24 @@ onBeforeUnmount(() => {
         <button
           @click.stop="showLanguageMenu = !showLanguageMenu"
           class="inline-flex items-center justify-between gap-2 px-3 py-1.5 text-sm rounded-md border transition-colors min-w-[140px]"
-          :class="isDarkMode 
-            ? 'bg-background text-foreground border-input hover:bg-accent hover:text-accent-foreground' 
-            : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'"
+          :class="
+            isDarkMode
+              ? 'bg-background text-foreground border-input hover:bg-accent hover:text-accent-foreground'
+              : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+          "
         >
           <span>{{ currentLanguage.label }}</span>
-          <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': showLanguageMenu }" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          <svg
+            class="w-4 h-4 transition-transform"
+            :class="{ 'rotate-180': showLanguageMenu }"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
           </svg>
         </button>
 
@@ -235,16 +246,28 @@ onBeforeUnmount(() => {
               @click="selectLanguage(lang)"
               class="w-full px-2 py-1.5 text-sm text-left rounded-sm transition-colors flex items-center justify-between"
               :class="[
-                lang.value === language 
-                  ? isDarkMode ? 'bg-accent text-accent-foreground' : 'bg-gray-100 text-gray-900'
-                  : isDarkMode 
-                    ? 'text-foreground hover:bg-accent hover:text-accent-foreground' 
+                lang.value === language
+                  ? isDarkMode
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-gray-100 text-gray-900'
+                  : isDarkMode
+                    ? 'text-foreground hover:bg-accent hover:text-accent-foreground'
                     : 'text-gray-700 hover:bg-gray-100'
               ]"
             >
               <span>{{ lang.label }}</span>
-              <svg v-if="lang.value === language" class="w-4 h-4" :class="isDarkMode ? 'text-primary' : 'text-gray-900'" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              <svg
+                v-if="lang.value === language"
+                class="w-4 h-4"
+                :class="isDarkMode ? 'text-primary' : 'text-gray-900'"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -259,17 +282,34 @@ onBeforeUnmount(() => {
         <button
           @click="toggleTheme"
           class="inline-flex items-center justify-center w-9 h-9 rounded-md transition-colors"
-          :class="isDarkMode 
-            ? 'text-muted-foreground hover:bg-accent hover:text-accent-foreground' 
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          :class="
+            isDarkMode
+              ? 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          "
           :title="isDarkMode ? '切换到亮色模式' : '切换到暗色模式'"
         >
-          <svg v-if="isDarkMode" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="4" stroke-width="2"/>
-            <path d="M12 2v2m0 16v2M4 12H2m4.31-5.69L5 5m12.69 1.31L19 5M6.31 17.69L5 19m12.69-1.31L19 19M22 12h-2" stroke-width="2" stroke-linecap="round"/>
+          <svg
+            v-if="isDarkMode"
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <circle cx="12" cy="12" r="4" stroke-width="2" />
+            <path
+              d="M12 2v2m0 16v2M4 12H2m4.31-5.69L5 5m12.69 1.31L19 5M6.31 17.69L5 19m12.69-1.31L19 19M22 12h-2"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
           <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
 
@@ -277,18 +317,26 @@ onBeforeUnmount(() => {
         <button
           @click="toggleRenderMode"
           class="inline-flex items-center justify-center w-9 h-9 rounded-md transition-colors"
-          :class="isDarkMode 
-            ? 'text-muted-foreground hover:bg-accent hover:text-accent-foreground' 
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          :class="
+            isDarkMode
+              ? 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          "
           :title="renderSideBySide ? '切换到内联模式' : '切换到并排模式'"
         >
-          <svg v-if="renderSideBySide" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <rect x="3" y="3" width="8" height="18" rx="1" stroke-width="2"/>
-            <rect x="13" y="3" width="8" height="18" rx="1" stroke-width="2"/>
+          <svg
+            v-if="renderSideBySide"
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <rect x="3" y="3" width="8" height="18" rx="1" stroke-width="2" />
+            <rect x="13" y="3" width="8" height="18" rx="1" stroke-width="2" />
           </svg>
           <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <rect x="3" y="3" width="18" height="18" rx="1" stroke-width="2"/>
-            <line x1="3" y1="12" x2="21" y2="12" stroke-width="2"/>
+            <rect x="3" y="3" width="18" height="18" rx="1" stroke-width="2" />
+            <line x1="3" y1="12" x2="21" y2="12" stroke-width="2" />
           </svg>
         </button>
 
@@ -298,12 +346,19 @@ onBeforeUnmount(() => {
         <button
           @click="swapCode"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 active:scale-95"
-          :class="isDarkMode 
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md' 
-            : 'bg-gray-900 text-white hover:bg-gray-800 hover:shadow-md'"
+          :class="
+            isDarkMode
+              ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md'
+              : 'bg-gray-900 text-white hover:bg-gray-800 hover:shadow-md'
+          "
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <span>交换</span>
         </button>
@@ -312,12 +367,19 @@ onBeforeUnmount(() => {
         <button
           @click="clearAll"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 active:scale-95"
-          :class="isDarkMode 
-            ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md' 
-            : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-md'"
+          :class="
+            isDarkMode
+              ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md'
+              : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-md'
+          "
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M3 6H5H21M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 3 16 3.44772 16 4V6M19 6V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V6H19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M3 6H5H21M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 3 16 3.44772 16 4V6M19 6V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V6H19Z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <span>清空</span>
         </button>

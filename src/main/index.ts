@@ -753,7 +753,10 @@ function setupIpcHandlers(): void {
 
     const result = await pluginManager.loadPlugin(pluginId)
     if (!result.success) {
-      logger.error({ pluginId, message: result.message }, 'Failed to load plugin for floating window')
+      logger.error(
+        { pluginId, message: result.message },
+        'Failed to load plugin for floating window'
+      )
       return
     }
 

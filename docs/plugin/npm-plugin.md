@@ -18,14 +18,14 @@ interface Plugin {
 }
 
 interface PluginMetadata {
-  id: string           // 唯一标识符
-  name: string         // 插件名称
-  description: string  // 插件描述
-  version: string      // 版本号
-  author: string       // 作者
-  icon: string         // SVG 路径
+  id: string // 唯一标识符
+  name: string // 插件名称
+  description: string // 插件描述
+  version: string // 版本号
+  author: string // 作者
+  icon: string // SVG 路径
   category: 'formatter' | 'tool' | 'encoder' | 'custom' // 分类
-  keywords: string[]   // 关键词
+  keywords: string[] // 关键词
   isThirdParty?: boolean // 是否为第三方插件
 }
 ```

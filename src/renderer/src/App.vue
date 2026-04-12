@@ -432,8 +432,6 @@ const tabs = ref<Tab[]>([])
 const activeTabId = ref('')
 const tabBarRef = ref<HTMLElement | null>(null)
 
-
-
 // 滚动标签栏到激活的标签
 const scrollToActiveTab = (tabId: string, isNew: boolean): void => {
   if (isNew) {
@@ -1160,7 +1158,10 @@ const addHomeTab = (): void => {
             <WebNavigator v-else-if="tab.type === 'web-navigator'" />
 
             <!-- 普通插件 - 无背景，让插件自己控制样式 -->
-            <div v-else class="flex-1 flex items-center justify-center border-2 border-green-500 p-4">
+            <div
+              v-else
+              class="flex-1 flex items-center justify-center border-2 border-green-500 p-4"
+            >
               <template v-if="pluginRegistry.get(tab.pluginId)?.component">
                 <div class="w-full h-full">
                   <!-- 使用动态组件渲染插件内容 -->

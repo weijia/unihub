@@ -6,15 +6,16 @@ import { initBrowserPolyfill } from './utils/browser-polyfill'
 // 初始化浏览器 polyfill（仅在浏览器环境中执行）
 if (typeof window !== 'undefined' && !window.electron) {
   initBrowserPolyfill()
-  
+
   // 注册 Service Worker（PWA 支持）
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
           console.log('Service Worker 注册成功:', registration.scope)
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Service Worker 注册失败:', error)
         })
     })
@@ -38,11 +39,13 @@ console.log('[main.ts] isSearchWindow:', isSearchWindow)
 const app = createApp(isSearchWindow ? SearchWindow : App)
 
 // 初始化插件系统
-initPlugins().then(() => {
-  console.log('✅ 插件系统初始化完成（异步）')
-}).catch((err) => {
-  console.error('❌ 插件系统初始化失败:', err)
-})
+initPlugins()
+  .then(() => {
+    console.log('✅ 插件系统初始化完成（异步）')
+  })
+  .catch((err) => {
+    console.error('❌ 插件系统初始化失败:', err)
+  })
 
 // 加载已安装的插件
 pluginInstaller.loadInstalledPlugins().catch((error) => {

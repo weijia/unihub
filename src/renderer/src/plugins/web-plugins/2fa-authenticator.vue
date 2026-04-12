@@ -344,7 +344,9 @@ onUnmounted(() => {
         >
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1 min-w-0">
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ account.issuer }}</h3>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {{ account.issuer }}
+              </h3>
               <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ account.name }}</p>
             </div>
             <div class="flex gap-1 ml-2">
@@ -377,7 +379,9 @@ onUnmounted(() => {
           </div>
 
           <div class="relative mb-2">
-            <div class="text-3xl font-mono font-bold text-center text-gray-900 dark:text-gray-100 tracking-wider">
+            <div
+              class="text-3xl font-mono font-bold text-center text-gray-900 dark:text-gray-100 tracking-wider"
+            >
               {{ generateToken(account.totp) }}
             </div>
             <Button

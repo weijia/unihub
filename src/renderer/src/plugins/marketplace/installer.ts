@@ -213,20 +213,23 @@ export class PluginInstaller {
 
         // 创建插件组件（根据环境选择不同的渲染方式）
         let component: Component
-        
-        console.log('🔧 [Installer] 环境检测:', { isBrowser: isBrowser, pluginId: metadata.id as string })
-        
+
+        console.log('🔧 [Installer] 环境检测:', {
+          isBrowser: isBrowser,
+          pluginId: metadata.id as string
+        })
+
         if (isBrowser) {
           // 浏览器环境：直接渲染插件内容
           console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
-          
+
           // 尝试从入口文件内容创建组件
           if (pluginInfo.entryContent) {
             console.log('🔧 [Installer] 尝试使用插件入口文件创建组件')
             try {
               // 解析入口文件内容，提取插件对象
               const entryContent = pluginInfo.entryContent
-              
+
               // 尝试使用 eval 执行入口文件内容
               const module = { exports: {} }
               const require = (name: string) => {
@@ -240,14 +243,20 @@ export class PluginInstaller {
                 }
                 throw new Error(`Module ${name} not found`)
               }
-              
+
               // 创建一个安全的执行环境
-              const executeCode = new Function('module', 'exports', 'require', 'window', entryContent)
+              const executeCode = new Function(
+                'module',
+                'exports',
+                'require',
+                'window',
+                entryContent
+              )
               executeCode(module, module.exports, require, window)
-              
+
               // 获取插件对象
               const plugin = module.exports.default || module.exports
-              
+
               if (plugin && plugin.component) {
                 console.log('🔧 [Installer] 成功从入口文件提取插件组件')
                 component = plugin.component
@@ -461,10 +470,10 @@ export class PluginInstaller {
             }
           })
         }
-        
+
         console.log('🔧 [Installer] 插件组件创建完成:', metadata.name as string)
         console.log('🔧 [Installer] 插件组件类型:', typeof component)
-        
+
         const plugin = {
           metadata: {
             id: metadata.id as string,

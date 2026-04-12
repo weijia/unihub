@@ -5,7 +5,9 @@
   "type": "module",
   "main": "dist/index.html",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite",
@@ -36,6 +38,9 @@
     "icon": "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
     "category": "tool",
     "entry": "dist/index.html",
-    "keywords": ["counter", "demo"]
+    "keywords": [
+      "counter",
+      "demo"
+    ]
   }
 }
