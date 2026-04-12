@@ -7,17 +7,11 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
-    lib: {
-      entry: 'src/index.ts',
-      formats: ['es'],
-      fileName: 'index'
-    },
     rollupOptions: {
-      external: ['vue'],
       output: {
-        globals: {
-          vue: 'Vue'
-        }
+        entryFileNames: 'index.js',
+        chunkFileNames: 'chunk-[hash].js',
+        assetFileNames: 'assets/[name].[ext]'
       }
     }
   }
