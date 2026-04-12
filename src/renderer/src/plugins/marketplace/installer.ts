@@ -1,5 +1,6 @@
 import { pluginRegistry } from '../registry'
 import { markRaw, Component } from 'vue'
+import { isBrowser } from '@/utils/plugin-adapter'
 
 /**
  * Component instance type for Vue components
@@ -210,20 +211,42 @@ export class PluginInstaller {
             ? category
             : 'custom'
 
-        // 创建插件组件（使用 WebContentsView）
-        const plugin = {
-          metadata: {
-            id: metadata.id as string,
-            name: metadata.name as string,
-            description: metadata.description as string,
-            version: metadata.version as string,
-            author: authorName,
-            icon: (metadata.icon as string) || 'M12 4v16m8-8H4',
-            category: validCategory,
-            keywords: (metadata.keywords as string[]) || [],
-            isThirdParty: true // 标记为第三方插件
-          },
-          component: markRaw({
+        // 创建插件组件（根据环境选择不同的渲染方式）
+        let component: Component
+        
+        if (isBrowser) {
+          // 浏览器环境：直接渲染插件内容
+          component = markRaw({
+            template: `
+              <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ pluginName }}</h2>
+                <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
+                  <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
+                  <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
+                  <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">计数器插件</h3>
+                    <div class="flex items-center gap-4">
+                      <button @click="count--" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">-</button>
+                      <span class="text-xl font-semibold">{{ count }}</span>
+                      <button @click="count++" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `,
+            data() {
+              return {
+                pluginName: metadata.name as string,
+                pluginId: metadata.id as string,
+                pluginVersion: metadata.version as string,
+                count: 0
+              }
+            }
+          })
+        } else {
+          // Electron 环境：使用 WebContentsView
+          component = markRaw({
             template: `
               <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900">
                 <div v-if="loading" class="flex-1 flex items-center justify-center">
@@ -332,7 +355,22 @@ export class PluginInstaller {
                 }, 16) // ~60fps
               }
             }
-          }),
+          })
+        }
+        
+        const plugin = {
+          metadata: {
+            id: metadata.id as string,
+            name: metadata.name as string,
+            description: metadata.description as string,
+            version: metadata.version as string,
+            author: authorName,
+            icon: (metadata.icon as string) || 'M12 4v16m8-8H4',
+            category: validCategory,
+            keywords: (metadata.keywords as string[]) || [],
+            isThirdParty: true // 标记为第三方插件
+          },
+          component: component,
           enabled: true,
           hasBackend: (metadata.permissions as string[])?.includes('backend') || false
         }
