@@ -169,7 +169,8 @@ export const api = {
       return { success: true }
     },
     open: async (pluginId: string) => {
-      console.log('[Browser Polyfill] plugin.open:', pluginId)
+      console.log('🔧 [Browser Polyfill] plugin.open:', pluginId)
+      console.log('🔧 [Browser Polyfill] 插件打开请求')
       return { success: true }
     },
     close: async (pluginId: string) => {

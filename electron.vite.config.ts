@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 import pkg from './package.json'
 
 // 检查是否是 Web 构建
-const isWebBuild = true // 暂时默认启用 Web 构建
+const isWebBuild = process.env.BUILD_TARGET === 'web' // 根据环境变量判断构建目标
 
 export default defineConfig({
   main: !isWebBuild

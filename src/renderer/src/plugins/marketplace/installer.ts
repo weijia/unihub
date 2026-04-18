@@ -216,7 +216,8 @@ export class PluginInstaller {
 
         console.log('🔧 [Installer] 环境检测:', {
           isBrowser: isBrowser,
-          pluginId: metadata.id as string
+          pluginId: metadata.id as string,
+          windowElectron: typeof window !== 'undefined' ? !!window.electron : 'window not available'
         })
 
         if (isBrowser) {
@@ -260,10 +261,24 @@ export class PluginInstaller {
               },
               mounted() {
                 console.log('🔧 [Installer] iframe 组件已挂载:', this.pluginId)
+                console.log('🔧 [Installer] 挂载时环境检测:', {
+                  windowElectron: typeof window !== 'undefined' ? !!window.electron : 'window not available',
+                  isBrowser: typeof window !== 'undefined' && !window.electron
+                })
                 console.log(
                   '🔧 [Installer] iframe 内容预览:',
                   this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : '')
                 )
+                // 检查 iframe 是否存在
+                this.$nextTick(() => {
+                  const iframe = document.querySelector(
+                    `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
+                  ) as HTMLIFrameElement
+                  console.log('🔧 [Installer] iframe 元素:', iframe)
+                  if (iframe) {
+                    console.log('🔧 [Installer] iframe srcdoc:', iframe.srcdoc ? '已设置' : '未设置')
+                  }
+                })
               },
               methods: {
                 onIframeLoadStart() {

@@ -469,31 +469,63 @@ const scrollToActiveTab = (tabId: string, isNew: boolean): void => {
 
 // 处理第三方插件视图的显示/隐藏/销毁
 const handleThirdPartyPlugin = (tabId: string, action: 'open' | 'close' | 'destroy'): void => {
-  if (!tabId) return
+  console.log('🔧 [handleThirdPartyPlugin] 开始处理:', { tabId, action })
+  if (!tabId) {
+    console.log('🔧 [handleThirdPartyPlugin] tabId 为空，跳过处理')
+    return
+  }
 
   const tab = tabs.value.find((t) => t.id === tabId)
-  if (!tab || tab.type !== 'plugin') return
+  console.log('🔧 [handleThirdPartyPlugin] 找到标签:', tab)
+  if (!tab || tab.type !== 'plugin') {
+    console.log('🔧 [handleThirdPartyPlugin] 不是插件标签，跳过处理')
+    return
+  }
 
   const plugin = pluginRegistry.get(tab.pluginId)
+  console.log('🔧 [handleThirdPartyPlugin] 找到插件:', plugin?.metadata?.name, 'isThirdParty:', plugin?.metadata?.isThirdParty)
   if (plugin?.metadata.isThirdParty) {
+    console.log('🔧 [handleThirdPartyPlugin] 执行插件动作:', action, 'pluginId:', tab.pluginId)
     window.api.plugin[action](tab.pluginId)
+    console.log('🔧 [handleThirdPartyPlugin] 插件动作执行完成:', action, 'pluginId:', tab.pluginId)
+  } else {
+    console.log('🔧 [handleThirdPartyPlugin] 不是第三方插件，跳过 API 调用')
   }
+  console.log('🔧 [handleThirdPartyPlugin] 处理完成:', { tabId, action })
 }
 
 // 监听标签切换，显示/隐藏第三方插件视图（不销毁）
 watch(activeTabId, (newTabId, oldTabId) => {
-  handleThirdPartyPlugin(oldTabId, 'close')
-  handleThirdPartyPlugin(newTabId, 'open')
+  console.log('🔧 [标签切换] 开始处理标签切换:', { oldTabId, newTabId })
+  
+  // 关闭旧标签的第三方插件
+  if (oldTabId) {
+    console.log('🔧 [标签切换] 关闭旧标签的第三方插件:', oldTabId)
+    handleThirdPartyPlugin(oldTabId, 'close')
+  }
+  
+  // 打开新标签的第三方插件
+  if (newTabId) {
+    console.log('🔧 [标签切换] 打开新标签的第三方插件:', newTabId)
+    handleThirdPartyPlugin(newTabId, 'open')
+  }
 
   // 如果新标签不是第三方插件，需要聚焦主窗口以接收键盘事件
-  const newTab = tabs.value.find((t) => t.id === newTabId)
-  if (newTab) {
-    const plugin = pluginRegistry.get(newTab.pluginId)
-    if (!plugin?.metadata.isThirdParty) {
-      // 内置组件，聚焦主窗口
-      window.electron.ipcRenderer.send('focus-main-window')
+  if (newTabId) {
+    const newTab = tabs.value.find((t) => t.id === newTabId)
+    console.log('🔧 [标签切换] 找到新标签:', newTab)
+    if (newTab) {
+      const plugin = pluginRegistry.get(newTab.pluginId)
+      console.log('🔧 [标签切换] 找到插件:', plugin?.metadata?.name, 'isThirdParty:', plugin?.metadata?.isThirdParty)
+      if (!plugin?.metadata.isThirdParty) {
+        // 内置组件，聚焦主窗口
+        console.log('🔧 [标签切换] 聚焦主窗口（非第三方插件）')
+        window.electron.ipcRenderer.send('focus-main-window')
+      }
     }
   }
+  
+  console.log('🔧 [标签切换] 标签切换处理完成')
 })
 
 // 获取所有启用的插件
@@ -525,14 +557,15 @@ const createOrActivateTab = (
   title: string,
   matcher?: (tab: Tab) => boolean
 ): void => {
-  console.log('[createOrActivateTab] 参数:', { type, pluginId, title })
+  console.log('🔧 [createOrActivateTab] 开始创建或激活标签:', { type, pluginId, title })
   const existingTab = tabs.value.find(matcher || ((t) => t.type === type))
-  console.log('[createOrActivateTab] 找到已存在的标签:', existingTab)
+  console.log('🔧 [createOrActivateTab] 找到已存在的标签:', existingTab?.id, existingTab?.title)
 
   if (existingTab) {
-    console.log('[createOrActivateTab] 激活已存在的标签:', existingTab.id)
+    console.log('🔧 [createOrActivateTab] 激活已存在的标签:', existingTab.id, existingTab.title)
     activeTabId.value = existingTab.id
     scrollToActiveTab(existingTab.id, false)
+    console.log('🔧 [createOrActivateTab] 标签激活完成')
     return
   }
 
@@ -542,20 +575,27 @@ const createOrActivateTab = (
     title,
     type
   }
-  console.log('[createOrActivateTab] 创建新标签:', newTab)
+  console.log('🔧 [createOrActivateTab] 创建新标签:', newTab)
   tabs.value.push(newTab)
   activeTabId.value = newTab.id
   scrollToActiveTab(newTab.id, true)
-  console.log('[createOrActivateTab] 标签创建完成，当前标签数:', tabs.value.length)
+  console.log('🔧 [createOrActivateTab] 标签创建完成，当前标签数:', tabs.value.length)
 }
 
 // 打开插件标签
 const openTab = (pluginId: string): void => {
+  console.log('🔧 [openTab] 开始打开插件标签:', { pluginId })
   const plugin = pluginRegistry.get(pluginId)
-  if (!plugin?.enabled) return
+  console.log('🔧 [openTab] 找到插件:', plugin?.metadata?.name, 'enabled:', plugin?.enabled)
+  if (!plugin?.enabled) {
+    console.log('🔧 [openTab] 插件不存在或未启用，跳过')
+    return
+  }
 
+  console.log('🔧 [openTab] 添加到最近使用列表')
   addRecent(pluginId)
 
+  console.log('🔧 [openTab] 创建或激活标签')
   createOrActivateTab(
     'plugin',
     pluginId,
@@ -564,6 +604,7 @@ const openTab = (pluginId: string): void => {
   )
 
   // 第三方插件的视图由组件自己在 mounted 中打开，这里不需要调用
+  console.log('🔧 [openTab] 打开插件标签完成:', plugin.metadata.name)
 }
 
 // 打开系统页面
