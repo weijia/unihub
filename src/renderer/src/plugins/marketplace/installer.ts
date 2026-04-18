@@ -1,5 +1,5 @@
 import { pluginRegistry } from '../registry'
-import { Component } from 'vue'
+import { Component, h } from 'vue'
 
 /**
  * 插件安装器
@@ -209,19 +209,22 @@ export class PluginInstaller {
           console.log('🔧 [Installer] 插件 ID:', metadata.id)
           console.log('🔧 [Installer] 插件名称:', metadata.name)
           component = {
-            template: `
-              <div class="w-full h-full plugin-html-container" :data-plugin-id="pluginId">
-                <iframe
-                  :srcdoc="htmlContent"
-                  class="w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin"
-                  @load="onIframeLoad"
-                  @error="onIframeError"
-                  @loadstart="onIframeLoadStart"
-                  @loadend="onIframeLoadEnd"
-                ></iframe>
-              </div>
-            `,
+            render() {
+              return h('div', {
+                class: 'w-full h-full plugin-html-container',
+                'data-plugin-id': this.pluginId
+              }, [
+                h('iframe', {
+                  srcdoc: this.htmlContent,
+                  class: 'w-full h-full border-0',
+                  sandbox: 'allow-scripts allow-same-origin',
+                  onLoad: this.onIframeLoad,
+                  onError: this.onIframeError,
+                  onLoadstart: this.onIframeLoadStart,
+                  onLoadend: this.onIframeLoadEnd
+                })
+              ])
+            },
             data() {
               return {
                 pluginName: metadata.name as string,
@@ -355,16 +358,30 @@ export class PluginInstaller {
             } else {
               console.warn('🔧 [Installer] 从入口文件提取插件组件失败，使用默认组件')
               component = {
-                template: `
-                  <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
-                    <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
-                      <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
-                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
-                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
-                    </div>
-                  </div>
-                `,
+                render() {
+                  return h('div', {
+                    class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
+                    style: 'min-height: 300px;'
+                  }, [
+                    h('h2', {
+                      class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
+                    }, `插件名称: ${this.pluginName}`),
+                    h('div', {
+                      class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
+                      style: 'min-height: 200px;'
+                    }, [
+                      h('p', {
+                        class: 'text-gray-600 dark:text-gray-400'
+                      }, '这是浏览器环境下的插件内容'),
+                      h('p', {
+                        class: 'text-gray-600 dark:text-gray-400 mt-2'
+                      }, `插件 ID: ${this.pluginId}`),
+                      h('p', {
+                        class: 'text-gray-600 dark:text-gray-400 mt-2'
+                      }, `插件版本: ${this.pluginVersion}`)
+                    ])
+                  ])
+                },
                 data() {
                   return {
                     pluginName: metadata.name as string,
@@ -377,14 +394,24 @@ export class PluginInstaller {
           } catch (error) {
             console.error('🔧 [Installer] 执行插件入口文件失败:', error)
             component = {
-              template: `
-                <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
-                  <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
-                  <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
-                    <p class="text-gray-600 dark:text-gray-400">加载失败: {{ errorMessage }}</p>
-                  </div>
-                </div>
-              `,
+              render() {
+                return h('div', {
+                  class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
+                  style: 'min-height: 300px;'
+                }, [
+                  h('h2', {
+                    class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
+                  }, `插件名称: ${this.pluginName}`),
+                  h('div', {
+                    class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
+                    style: 'min-height: 200px;'
+                  }, [
+                    h('p', {
+                      class: 'text-gray-600 dark:text-gray-400'
+                    }, `加载失败: ${this.errorMessage}`)
+                  ])
+                ])
+              },
               data() {
                 return {
                   pluginName: metadata.name as string,
@@ -398,15 +425,27 @@ export class PluginInstaller {
           // 没有入口文件内容，使用默认组件
           console.warn('🔧 [Installer] 插件入口文件内容不存在，使用默认组件')
           component = {
-            template: `
-              <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
-                <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
-                  <p class="text-gray-600 dark:text-gray-400">插件内容加载中...</p>
-                  <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
-                </div>
-              </div>
-            `,
+            render() {
+              return h('div', {
+                class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
+                style: 'min-height: 300px;'
+              }, [
+                h('h2', {
+                  class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
+                }, `插件名称: ${this.pluginName}`),
+                h('div', {
+                  class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
+                  style: 'min-height: 200px;'
+                }, [
+                  h('p', {
+                    class: 'text-gray-600 dark:text-gray-400'
+                  }, '插件内容加载中...'),
+                  h('p', {
+                    class: 'text-gray-600 dark:text-gray-400 mt-2'
+                  }, `插件 ID: ${this.pluginId}`)
+                ])
+              ])
+            },
             data() {
               return {
                 pluginName: metadata.name as string,
