@@ -1,28 +1,9 @@
 import { pluginRegistry } from '../registry'
-import { markRaw, Component } from 'vue'
-import { isBrowser } from '@/utils/plugin-adapter'
+import { Component } from 'vue'
 
 /**
- * Component instance type for Vue components
- */
-interface ComponentInstance {
-  pluginId: string
-  pluginName: string
-  loading: boolean
-  error: string
-  isActive: boolean
-  resizeObserver: ResizeObserver | null
-  resizeTimeout: number | null
-  $refs: {
-    pluginContainer?: HTMLElement
-  }
-  $nextTick: (callback: () => void) => void
-  updateViewBounds: () => void
-}
-
-/**
- * 插件安装器（Electron 版本）
- * 使用 WebContentsView 加载插件
+ * 插件安装器
+ * 使用 iframe 加载插件
  */
 export class PluginInstaller {
   /**
@@ -211,188 +192,156 @@ export class PluginInstaller {
             ? category
             : 'custom'
 
-        // 创建插件组件（根据环境选择不同的渲染方式）
+        // 创建插件组件（统一使用 iframe 渲染，兼容所有环境）
         let component: Component
 
-        console.log('🔧 [Installer] 环境检测:', {
-          isBrowser: isBrowser(),
-          pluginId: metadata.id as string,
-          windowElectron: typeof window !== 'undefined' ? !!window.electron : 'window not available'
-        })
+        console.log('🔧 [Installer] 创建插件组件:', metadata.name as string)
 
-        if (isBrowser()) {
-          // 浏览器环境：直接渲染插件内容
-          console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
+        // 检查入口文件类型
+        const entryType = (pluginInfo as any).entryType || 'html'
+        const entryContent = (pluginInfo as any).entryContent
+        console.log('🔧 [Installer] 入口文件类型:', entryType)
 
-          // 检查入口文件类型
-          const entryType = (pluginInfo as any).entryType || 'html'
-          const entryContent = (pluginInfo as any).entryContent
-          console.log('🔧 [Installer] 入口文件类型:', entryType)
+        if (entryType === 'html' && entryContent) {
+          // HTML 入口文件：使用 iframe 渲染
+          console.log('🔧 [Installer] 使用 HTML 入口文件渲染')
+          console.log('🔧 [Installer] HTML 内容长度:', entryContent.length)
+          console.log('🔧 [Installer] 插件 ID:', metadata.id)
+          console.log('🔧 [Installer] 插件名称:', metadata.name)
+          component = {
+            template: `
+              <div class="w-full h-full plugin-html-container" :data-plugin-id="pluginId">
+                <iframe
+                  :srcdoc="htmlContent"
+                  class="w-full h-full border-0"
+                  sandbox="allow-scripts allow-same-origin"
+                  @load="onIframeLoad"
+                  @error="onIframeError"
+                  @loadstart="onIframeLoadStart"
+                  @loadend="onIframeLoadEnd"
+                ></iframe>
+              </div>
+            `,
+            data() {
+              return {
+                pluginName: metadata.name as string,
+                pluginId: metadata.id as string,
+                pluginVersion: metadata.version as string,
+                htmlContent: entryContent as string,
+                iframeLoading: false,
+                iframeError: null
+              }
+            },
+            mounted() {
+              console.log('🔧 [Installer] iframe 组件已挂载:', this.pluginId)
+              console.log(
+                '🔧 [Installer] iframe 内容预览:',
+                this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : '')
+              )
+              // 检查 iframe 是否存在
+              this.$nextTick(() => {
+                console.log('🔧 [Installer] 检查 DOM 结构')
+                console.log('🔧 [Installer] this.$el:', this.$el)
+                console.log('🔧 [Installer] this.$el.innerHTML:', this.$el.innerHTML)
 
-          if (entryType === 'html' && entryContent) {
-            // HTML 入口文件：使用 iframe 渲染
-            console.log('🔧 [Installer] 使用 HTML 入口文件渲染')
-            console.log('🔧 [Installer] HTML 内容长度:', entryContent.length)
-            console.log('🔧 [Installer] 插件 ID:', metadata.id)
-            console.log('🔧 [Installer] 插件名称:', metadata.name)
-            component = {
-              template: `
-                <div class="w-full h-full plugin-html-container" :data-plugin-id="pluginId">
-                  <iframe 
-                    :srcdoc="htmlContent" 
-                    class="w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin"
-                    @load="onIframeLoad"
-                    @error="onIframeError"
-                    @loadstart="onIframeLoadStart"
-                    @loadend="onIframeLoadEnd"
-                  ></iframe>
-                </div>
-              `,
-              data() {
-                return {
-                  pluginName: metadata.name as string,
-                  pluginId: metadata.id as string,
-                  pluginVersion: metadata.version as string,
-                  htmlContent: entryContent as string,
-                  iframeLoading: false,
-                  iframeError: null
-                }
-              },
-              mounted() {
-                console.log('🔧 [Installer] iframe 组件已挂载:', this.pluginId)
-                console.log('🔧 [Installer] 挂载时环境检测:', {
-                  windowElectron: typeof window !== 'undefined' ? !!window.electron : 'window not available',
-                  isBrowser: typeof window !== 'undefined' && !window.electron
-                })
-                console.log(
-                  '🔧 [Installer] iframe 内容预览:',
-                  this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : '')
+                // 先检查容器元素
+                const container = document.querySelector(
+                  `.plugin-html-container[data-plugin-id="${this.pluginId}"]`
                 )
-                // 检查 iframe 是否存在
-                this.$nextTick(() => {
-                  console.log('🔧 [Installer] 检查 DOM 结构')
-                  console.log('🔧 [Installer] this.$el:', this.$el)
-                  console.log('🔧 [Installer] this.$el.innerHTML:', this.$el.innerHTML)
-                  
-                  // 先检查容器元素
-                  const container = document.querySelector(
-                    `.plugin-html-container[data-plugin-id="${this.pluginId}"]`
-                  )
-                  console.log('🔧 [Installer] 容器元素:', container)
-                  if (container) {
-                    console.log('🔧 [Installer] 容器内容:', container.innerHTML)
-                  }
-                  
-                  // 然后检查 iframe
+                console.log('🔧 [Installer] 容器元素:', container)
+                if (container) {
+                  console.log('🔧 [Installer] 容器内容:', container.innerHTML)
+                }
+
+                // 然后检查 iframe
+                const iframe = document.querySelector(
+                  `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
+                ) as HTMLIFrameElement
+                console.log('🔧 [Installer] iframe 元素:', iframe)
+                if (iframe) {
+                  console.log('🔧 [Installer] iframe srcdoc:', iframe.srcdoc ? '已设置' : '未设置')
+                }
+              })
+            },
+            methods: {
+              onIframeLoadStart() {
+                console.log('🔧 [Installer] iframe 开始加载:', this.pluginId)
+                this.iframeLoading = true
+              },
+              onIframeLoad() {
+                console.log('🔧 [Installer] HTML 插件 iframe 加载完成:', this.pluginId)
+                this.iframeLoading = false
+                // 获取 iframe 内容信息
+                try {
                   const iframe = document.querySelector(
                     `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
                   ) as HTMLIFrameElement
-                  console.log('🔧 [Installer] iframe 元素:', iframe)
-                  if (iframe) {
-                    console.log('🔧 [Installer] iframe srcdoc:', iframe.srcdoc ? '已设置' : '未设置')
+                  if (iframe && iframe.contentDocument) {
+                    const title = iframe.contentDocument.title || '无标题'
+                    const headings = iframe.contentDocument.querySelectorAll('h1, h2, h3').length
+                    console.log('🔧 [Installer] iframe 内容信息:', {
+                      pluginId: this.pluginId,
+                      title,
+                      headingsCount: headings,
+                      url: iframe.srcdoc ? 'srcdoc' : iframe.src
+                    })
                   }
-                })
-              },
-              methods: {
-                onIframeLoadStart() {
-                  console.log('🔧 [Installer] iframe 开始加载:', this.pluginId)
-                  this.iframeLoading = true
-                },
-                onIframeLoad() {
-                  console.log('🔧 [Installer] HTML 插件 iframe 加载完成:', this.pluginId)
-                  this.iframeLoading = false
-                  // 获取 iframe 内容信息
-                  try {
-                    const iframe = document.querySelector(
-                      `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
-                    ) as HTMLIFrameElement
-                    if (iframe && iframe.contentDocument) {
-                      const title = iframe.contentDocument.title || '无标题'
-                      const headings = iframe.contentDocument.querySelectorAll('h1, h2, h3').length
-                      console.log('🔧 [Installer] iframe 内容信息:', {
-                        pluginId: this.pluginId,
-                        title,
-                        headingsCount: headings,
-                        url: iframe.srcdoc ? 'srcdoc' : iframe.src
-                      })
-                    }
-                  } catch (error) {
-                    console.warn('🔧 [Installer] 获取 iframe 内容信息失败:', error)
-                  }
-                },
-                onIframeLoadEnd() {
-                  console.log('🔧 [Installer] iframe 加载结束:', this.pluginId)
-                  this.iframeLoading = false
-                },
-                onIframeError(event: Event) {
-                  console.error('🔧 [Installer] iframe 加载错误:', this.pluginId, event)
-                  this.iframeError = event
-                  this.iframeLoading = false
+                } catch (error) {
+                  console.warn('🔧 [Installer] 获取 iframe 内容信息失败:', error)
                 }
+              },
+              onIframeLoadEnd() {
+                console.log('🔧 [Installer] iframe 加载结束:', this.pluginId)
+                this.iframeLoading = false
+              },
+              onIframeError(event: Event) {
+                console.error('🔧 [Installer] iframe 加载错误:', this.pluginId, event)
+                this.iframeError = event
+                this.iframeLoading = false
               }
             }
-          } else if (typeof entryContent === 'string' && entryType === 'js') {
-            // JavaScript 入口文件：尝试执行 JS 代码
-            console.log('🔧 [Installer] 使用 JavaScript 入口文件')
-            try {
-              // 解析入口文件内容，提取插件对象
-              const module = { exports: {} } as { exports: any }
-              const require = (name: string) => {
-                if (name === 'vue') {
-                  if ((window as any).Vue) {
-                    return (window as any).Vue
-                  } else {
-                    throw new Error('Vue is not available in global scope')
-                  }
-                }
-                throw new Error(`Module ${name} not found`)
-              }
-
-              const executeCode = new Function(
-                'module',
-                'exports',
-                'require',
-                'window',
-                entryContent
-              )
-              executeCode(module, module.exports, require, window)
-
-              const plugin = module.exports.default || module.exports
-
-              if (plugin && plugin.component) {
-                console.log('🔧 [Installer] 成功从入口文件提取插件组件')
-                component = plugin.component
-              } else {
-                console.warn('🔧 [Installer] 从入口文件提取插件组件失败，使用默认组件')
-                component = {
-                  template: `
-                    <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
-                      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
-                      <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
-                        <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
-                        <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
-                        <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
-                      </div>
-                    </div>
-                  `,
-                  data() {
-                    return {
-                      pluginName: metadata.name as string,
-                      pluginId: metadata.id as string,
-                      pluginVersion: metadata.version as string
-                    }
-                  }
+          }
+        } else if (typeof entryContent === 'string' && entryType === 'js') {
+          // JavaScript 入口文件：尝试执行 JS 代码
+          console.log('🔧 [Installer] 使用 JavaScript 入口文件')
+          try {
+            // 解析入口文件内容，提取插件对象
+            const module = { exports: {} } as { exports: any }
+            const require = (name: string) => {
+              if (name === 'vue') {
+                if ((window as any).Vue) {
+                  return (window as any).Vue
+                } else {
+                  throw new Error('Vue is not available in global scope')
                 }
               }
-            } catch (error) {
-              console.error('🔧 [Installer] 执行插件入口文件失败:', error)
+              throw new Error(`Module ${name} not found`)
+            }
+
+            const executeCode = new Function(
+              'module',
+              'exports',
+              'require',
+              'window',
+              entryContent
+            )
+            executeCode(module, module.exports, require, window)
+
+            const plugin = module.exports.default || module.exports
+
+            if (plugin && plugin.component) {
+              console.log('🔧 [Installer] 成功从入口文件提取插件组件')
+              component = plugin.component
+            } else {
+              console.warn('🔧 [Installer] 从入口文件提取插件组件失败，使用默认组件')
               component = {
                 template: `
                   <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
                     <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
-                      <p class="text-gray-600 dark:text-gray-400">加载失败: {{ errorMessage }}</p>
+                      <p class="text-gray-600 dark:text-gray-400">这是浏览器环境下的插件内容</p>
+                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
+                      <p class="text-gray-600 dark:text-gray-400 mt-2">插件版本: {{ pluginVersion }}</p>
                     </div>
                   </div>
                 `,
@@ -400,145 +349,51 @@ export class PluginInstaller {
                   return {
                     pluginName: metadata.name as string,
                     pluginId: metadata.id as string,
-                    errorMessage: error instanceof Error ? error.message : String(error)
+                    pluginVersion: metadata.version as string
                   }
                 }
               }
             }
-          } else {
-            // 没有入口文件内容，使用默认组件
-            console.warn('🔧 [Installer] 插件入口文件内容不存在，使用默认组件')
+          } catch (error) {
+            console.error('🔧 [Installer] 执行插件入口文件失败:', error)
             component = {
               template: `
                 <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
                   <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
                   <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
-                    <p class="text-gray-600 dark:text-gray-400">插件内容加载中...</p>
-                    <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
+                    <p class="text-gray-600 dark:text-gray-400">加载失败: {{ errorMessage }}</p>
                   </div>
                 </div>
               `,
               data() {
                 return {
                   pluginName: metadata.name as string,
-                  pluginId: metadata.id as string
+                  pluginId: metadata.id as string,
+                  errorMessage: error instanceof Error ? error.message : String(error)
                 }
               }
             }
           }
         } else {
-          // Electron 环境：使用 WebContentsView
-          console.log('🔧 [Installer] 创建 Electron 环境插件组件:', metadata.name as string)
-          component = markRaw({
+          // 没有入口文件内容，使用默认组件
+          console.warn('🔧 [Installer] 插件入口文件内容不存在，使用默认组件')
+          component = {
             template: `
-              <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900">
-                <div v-if="loading" class="flex-1 flex items-center justify-center">
-                  <div class="text-center">
-                    <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">加载插件中...</p>
-                  </div>
-                </div>
-                <div v-else-if="error" class="flex-1 flex items-center justify-center">
-                  <div class="text-center max-w-md">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                      <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">加载失败</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ error }}</p>
-                  </div>
-                </div>
-                <div v-else class="flex-1 w-full" ref="pluginContainer">
-                  <!-- WebContentsView 将在这里显示 -->
+              <div class="w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4" style="min-height: 300px;">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">插件名称: {{ pluginName }}</h2>
+                <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4" style="min-height: 200px;">
+                  <p class="text-gray-600 dark:text-gray-400">插件内容加载中...</p>
+                  <p class="text-gray-600 dark:text-gray-400 mt-2">插件 ID: {{ pluginId }}</p>
                 </div>
               </div>
             `,
             data() {
               return {
                 pluginName: metadata.name as string,
-                pluginId: metadata.id as string,
-                loading: true,
-                error: '',
-                isActive: false,
-                resizeObserver: null as ResizeObserver | null,
-                resizeTimeout: null as number | null // 防抖定时器
-              }
-            },
-            async mounted(this: ComponentInstance) {
-              try {
-                const result = await window.api.plugin.open(this.pluginId)
-
-                if (!result.success) {
-                  this.error = result.message || '加载插件失败'
-                  this.loading = false
-                  return
-                }
-
-                this.loading = false
-                this.isActive = true
-                console.log('✅ 插件已加载:', this.pluginId)
-
-                // 使用 ResizeObserver 代替 resize 事件（性能更好）
-                this.$nextTick(() => {
-                  this.updateViewBounds()
-
-                  const container = this.$refs.pluginContainer as HTMLElement
-                  if (container && 'ResizeObserver' in window) {
-                    this.resizeObserver = new ResizeObserver(() => {
-                      this.updateViewBounds()
-                    })
-                    this.resizeObserver.observe(container)
-                  } else {
-                    // 降级到 resize 事件
-                    window.addEventListener('resize', this.updateViewBounds)
-                  }
-                })
-              } catch (err) {
-                console.error('加载插件失败:', err)
-                this.error = String(err)
-                this.loading = false
-              }
-            },
-            beforeUnmount(this: ComponentInstance) {
-              if (this.isActive) {
-                window.api.plugin.close(this.pluginId)
-
-                // 清理防抖定时器
-                if (this.resizeTimeout) {
-                  clearTimeout(this.resizeTimeout)
-                }
-
-                // 清理 ResizeObserver
-                if (this.resizeObserver) {
-                  this.resizeObserver.disconnect()
-                } else {
-                  window.removeEventListener('resize', this.updateViewBounds)
-                }
-              }
-            },
-            methods: {
-              updateViewBounds(this: ComponentInstance) {
-                // 防抖：避免频繁更新
-                if (this.resizeTimeout) {
-                  clearTimeout(this.resizeTimeout)
-                }
-
-                this.resizeTimeout = window.setTimeout(() => {
-                  const container = this.$refs.pluginContainer as HTMLElement
-                  if (!container) return
-
-                  const rect = container.getBoundingClientRect()
-                  window.api.plugin.updateBounds(this.pluginId, {
-                    x: Math.round(rect.x),
-                    y: Math.round(rect.y),
-                    width: Math.round(rect.width),
-                    height: Math.round(rect.height)
-                  })
-                }, 16) // ~60fps
+                pluginId: metadata.id as string
               }
             }
-          })
+          }
         }
 
         console.log('🔧 [Installer] 插件组件创建完成:', metadata.name as string)
