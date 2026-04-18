@@ -249,33 +249,37 @@ export class PluginInstaller {
               setTimeout(() => {
                 console.log('🔧 [Installer] 延迟检查 DOM 结构')
                 console.log('🔧 [Installer] this.$el:', this.$el)
-                console.log('🔧 [Installer] this.$el.innerHTML:', this.$el.innerHTML)
+                console.log('🔧 [Installer] this.$el 类型:', typeof this.$el)
+                console.log('🔧 [Installer] this.$el 构造函数:', this.$el?.constructor?.name)
                 
-                // 直接使用 this.$el 检查，而不是通过 document.querySelector
-                if (this.$el) {
-                  console.log('🔧 [Installer] 组件根元素存在')
+                // 安全检查 this.$el
+                if (this.$el && typeof this.$el.querySelector === 'function') {
+                  console.log('🔧 [Installer] 组件根元素存在且有 querySelector 方法')
                   const iframe = this.$el.querySelector('iframe')
                   console.log('🔧 [Installer] 直接查找 iframe:', iframe)
                   if (iframe) {
                     console.log('🔧 [Installer] iframe srcdoc:', (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置')
                   }
+                } else {
+                  console.warn('🔧 [Installer] this.$el 不是有效的 DOM 元素:', this.$el)
                 }
                 
                 // 同时也通过选择器检查
-                const container = document.querySelector(
-                  `.plugin-html-container[data-plugin-id="${this.pluginId}"]`
-                )
-                console.log('🔧 [Installer] 容器元素 (通过选择器):', container)
-                if (container) {
-                  console.log('🔧 [Installer] 容器内容:', container.innerHTML)
-                }
-                
-                const iframe = document.querySelector(
-                  `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
-                ) as HTMLIFrameElement
-                console.log('🔧 [Installer] iframe 元素 (通过选择器):', iframe)
-                if (iframe) {
-                  console.log('🔧 [Installer] iframe srcdoc (通过选择器):', iframe.srcdoc ? '已设置' : '未设置')
+                try {
+                  const container = document.querySelector(
+                    `.plugin-html-container[data-plugin-id="${this.pluginId}"]`
+                  )
+                  console.log('🔧 [Installer] 容器元素 (通过选择器):', container)
+                  if (container) {
+                    console.log('🔧 [Installer] 容器内容:', container.innerHTML)
+                    const iframe = container.querySelector('iframe')
+                    console.log('🔧 [Installer] 从容器查找 iframe:', iframe)
+                    if (iframe) {
+                      console.log('🔧 [Installer] iframe srcdoc:', (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置')
+                    }
+                  }
+                } catch (error) {
+                  console.error('🔧 [Installer] 选择器检查失败:', error)
                 }
               }, 100)
             },
