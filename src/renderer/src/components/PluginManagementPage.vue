@@ -318,7 +318,7 @@ const installFile = async (file: File): Promise<void> => {
 }
 
 // 卸载插件 - 显示确认对话框
-const confirmUninstall = (pluginId: string, pluginName: string): void => {
+const showUninstallDialogForPlugin = (pluginId: string, pluginName: string): void => {
   pluginToUninstall.value = { id: pluginId, name: pluginName }
   showUninstallDialog.value = true
 }
@@ -369,10 +369,10 @@ const installNpmPlugin = async (): Promise<void> => {
   }
 }
 
-// Uninstall npm plugin
-const uninstallNpmPlugin = (pluginId: string, pluginName: string): void => {
-  pluginToUninstall.value = { id: pluginId, name: pluginName }
-  showUninstallDialog.value = true
+// 检查插件是否是 npm 插件
+const isNpmPlugin = (pluginId: string): boolean => {
+  const npmPlugins = npmPluginManager.getAllSavedPlugins()
+  return npmPlugins.some(plugin => plugin.pluginId === pluginId)
 }
 
 const confirmUninstallNpm = async (): Promise<void> => {
@@ -387,6 +387,18 @@ const confirmUninstallNpm = async (): Promise<void> => {
   } finally {
     showUninstallDialog.value = false
     pluginToUninstall.value = null
+  }
+}
+
+// 确认卸载（根据插件类型调用相应的方法）
+const confirmUninstall = async (): Promise<void> => {
+  if (!pluginToUninstall.value) return
+  
+  // 检查是否是 npm 插件
+  if (isNpmPlugin(pluginToUninstall.value.id)) {
+    await confirmUninstallNpm()
+  } else {
+    await uninstallPlugin()
   }
 }
 </script>
@@ -502,7 +514,7 @@ const confirmUninstallNpm = async (): Promise<void> => {
                   size="sm"
                   variant="outline"
                   class="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 text-xs px-2 py-1 h-auto"
-                  @click="confirmUninstall(plugin.metadata.id, plugin.metadata.name)"
+                  @click="showUninstallDialogForPlugin(plugin.metadata.id, plugin.metadata.name)"
                 >
                   卸载
                 </Button>
@@ -722,7 +734,7 @@ const confirmUninstallNpm = async (): Promise<void> => {
           <Button variant="outline" @click="showUninstallDialog = false">取消</Button>
           <Button
             variant="destructive"
-            @click="isBrowser ? confirmUninstallNpm() : uninstallPlugin()"
+            @click="confirmUninstall()"
             >确认卸载</Button
           >
         </DialogFooter>
