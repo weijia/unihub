@@ -1,8 +1,8 @@
 // 插件适配层，为浏览器环境提供兼容的 API
 
-// 检测运行环境
-export const isBrowser = typeof window !== 'undefined' && !window.electron
-export const isElectron = typeof window !== 'undefined' && window.electron
+// 检测运行环境（使用函数以便动态检测）
+export const isBrowser = () => typeof window !== 'undefined' && !window.electron
+export const isElectron = () => typeof window !== 'undefined' && !!window.electron
 
 // 插件存储接口
 export interface PluginStorage {
@@ -361,10 +361,10 @@ export class PluginAdapter {
 
   constructor(pluginId: string) {
     this.pluginId = pluginId
-    this.storage = isBrowser ? new BrowserStorage(pluginId) : new ElectronStorage(pluginId)
-    this._clipboard = isBrowser ? new BrowserClipboard() : new ElectronClipboard()
-    this._system = isBrowser ? new BrowserSystem() : new ElectronSystem()
-    this._http = isBrowser ? new BrowserHttp() : new ElectronHttp()
+    this.storage = isBrowser() ? new BrowserStorage(pluginId) : new ElectronStorage(pluginId)
+    this._clipboard = isBrowser() ? new BrowserClipboard() : new ElectronClipboard()
+    this._system = isBrowser() ? new BrowserSystem() : new ElectronSystem()
+    this._http = isBrowser() ? new BrowserHttp() : new ElectronHttp()
   }
 
   get db(): PluginStorage {
@@ -385,7 +385,7 @@ export class PluginAdapter {
 
   // 通知 API
   async showNotification(options: { title: string; body: string; icon?: string }): Promise<void> {
-    if (isBrowser) {
+    if (isBrowser()) {
       if ('Notification' in window) {
         if (Notification.permission === 'granted') {
           new Notification(options.title, {
@@ -421,5 +421,5 @@ export function createPluginAPI(pluginId: string): PluginAdapter {
 export const environment = {
   isBrowser,
   isElectron,
-  platform: isBrowser ? 'browser' : 'electron'
+  platform: isBrowser() ? 'browser' : 'electron'
 }

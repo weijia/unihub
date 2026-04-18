@@ -15,7 +15,7 @@ export async function initPlugins(): Promise<void> {
   })
 
   // 在浏览器环境中注册 Web 版插件
-  if (isBrowser) {
+  if (isBrowser()) {
     console.log('🔧 浏览器环境，加载 Web 版插件')
     webPlugins.forEach((plugin) => {
       pluginRegistry.register(plugin)

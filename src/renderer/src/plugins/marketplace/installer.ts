@@ -215,12 +215,12 @@ export class PluginInstaller {
         let component: Component
 
         console.log('🔧 [Installer] 环境检测:', {
-          isBrowser: isBrowser,
+          isBrowser: isBrowser(),
           pluginId: metadata.id as string,
           windowElectron: typeof window !== 'undefined' ? !!window.electron : 'window not available'
         })
 
-        if (isBrowser) {
+        if (isBrowser()) {
           // 浏览器环境：直接渲染插件内容
           console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
 
@@ -271,6 +271,20 @@ export class PluginInstaller {
                 )
                 // 检查 iframe 是否存在
                 this.$nextTick(() => {
+                  console.log('🔧 [Installer] 检查 DOM 结构')
+                  console.log('🔧 [Installer] this.$el:', this.$el)
+                  console.log('🔧 [Installer] this.$el.innerHTML:', this.$el.innerHTML)
+                  
+                  // 先检查容器元素
+                  const container = document.querySelector(
+                    `.plugin-html-container[data-plugin-id="${this.pluginId}"]`
+                  )
+                  console.log('🔧 [Installer] 容器元素:', container)
+                  if (container) {
+                    console.log('🔧 [Installer] 容器内容:', container.innerHTML)
+                  }
+                  
+                  // 然后检查 iframe
                   const iframe = document.querySelector(
                     `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
                   ) as HTMLIFrameElement
