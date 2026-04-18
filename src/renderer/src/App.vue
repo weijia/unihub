@@ -50,6 +50,19 @@ const hasPluginTabs = (): boolean => {
   return tabs.value.some((t) => t.type === 'plugin')
 }
 
+// 打印插件信息
+const printPluginInfo = (pluginId: string) => {
+  console.log('🔧 [App] 渲染插件:', pluginId)
+  const plugin = pluginRegistry.get(pluginId)
+  console.log('🔧 [App] 插件信息:', plugin)
+  if (plugin) {
+    console.log('🔧 [App] 插件组件:', plugin.component)
+    console.log('🔧 [App] 插件组件类型:', typeof plugin.component)
+    console.log('🔧 [App] 插件组件构造函数:', plugin.component?.constructor?.name)
+  }
+  return null // 返回 null 避免渲染到页面
+}
+
 // 统一的关闭标签处理函数
 const handleCloseTabRequest = (): void => {
   // 检查锁
@@ -1205,6 +1218,8 @@ const addHomeTab = (): void => {
             >
               <template v-if="pluginRegistry.get(tab.pluginId)?.component">
                 <div class="w-full h-full">
+                  <!-- 打印插件信息 -->
+                  {{ printPluginInfo(tab.pluginId) }}
                   <!-- 使用动态组件渲染插件内容 -->
                   <component
                     :is="pluginRegistry.get(tab.pluginId)?.component"
