@@ -970,20 +970,33 @@ export const versions = {
 function getMimeType(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() || ''
   switch (ext) {
-    case 'js': return 'application/javascript'
-    case 'css': return 'text/css'
-    case 'html': return 'text/html'
-    case 'png': return 'image/png'
+    case 'js':
+      return 'application/javascript'
+    case 'css':
+      return 'text/css'
+    case 'html':
+      return 'text/html'
+    case 'png':
+      return 'image/png'
     case 'jpg':
-    case 'jpeg': return 'image/jpeg'
-    case 'gif': return 'image/gif'
-    case 'svg': return 'image/svg+xml'
-    case 'json': return 'application/json'
-    case 'woff': return 'font/woff'
-    case 'woff2': return 'font/woff2'
-    case 'ttf': return 'font/ttf'
-    case 'eot': return 'font/eot'
-    default: return 'application/octet-stream'
+    case 'jpeg':
+      return 'image/jpeg'
+    case 'gif':
+      return 'image/gif'
+    case 'svg':
+      return 'image/svg+xml'
+    case 'json':
+      return 'application/json'
+    case 'woff':
+      return 'font/woff'
+    case 'woff2':
+      return 'font/woff2'
+    case 'ttf':
+      return 'font/ttf'
+    case 'eot':
+      return 'font/eot'
+    default:
+      return 'application/octet-stream'
   }
 }
 
@@ -991,7 +1004,13 @@ function getMimeType(path: string): string {
 async function extractPluginInfo(
   buffer: Uint8Array | number[],
   source: string
-): Promise<{ id: string; metadata: any; entryContent: string | null; entryType: 'html' | 'js' | null; resources: Record<string, string> }> {
+): Promise<{
+  id: string
+  metadata: any
+  entryContent: string | null
+  entryType: 'html' | 'js' | null
+  resources: Record<string, string>
+}> {
   console.log('[Browser Polyfill] 开始解压插件包:', source)
   try {
     // 创建 JSZip 实例
@@ -1075,7 +1094,10 @@ async function extractPluginInfo(
         if (distPath.startsWith('assets/')) {
           const parentRelativePath = '../' + distPath
           processedContent = processedContent.replace(
-            new RegExp(`(src|href|url)\s*=\s*["']${parentRelativePath.replace(/\//g, '\\/')}["']`, 'g'),
+            new RegExp(
+              `(src|href|url)\s*=\s*["']${parentRelativePath.replace(/\//g, '\\/')}["']`,
+              'g'
+            ),
             `$1="${dataUri}"`
           )
         }
@@ -1122,25 +1144,45 @@ async function extractPluginInfo(
     const unihubConfig = packageJson?.unihub || {}
 
     // 构建插件信息
-    const pluginId = (unihubConfig.id || metadata?.id || packageJson?.name || 'plugin_' + Date.now()) as string
+    const pluginId = (unihubConfig.id ||
+      metadata?.id ||
+      packageJson?.name ||
+      'plugin_' + Date.now()) as string
     const pluginMetadata = {
       id: pluginId,
-      name: (unihubConfig.name || metadata?.name ||
+      name: (unihubConfig.name ||
+        metadata?.name ||
         packageJson?.name ||
         source.split('/').pop()?.replace('.zip', '') ||
         'Unknown Plugin') as string,
-      description: (unihubConfig.description || metadata?.description ||
+      description: (unihubConfig.description ||
+        metadata?.description ||
         packageJson?.description ||
         'Installed from ' + source) as string,
-      version: (unihubConfig.version || metadata?.version || packageJson?.version || '1.0.0') as string,
-      author: (unihubConfig.author || metadata?.author || packageJson?.author || 'Unknown') as string,
+      version: (unihubConfig.version ||
+        metadata?.version ||
+        packageJson?.version ||
+        '1.0.0') as string,
+      author: (unihubConfig.author ||
+        metadata?.author ||
+        packageJson?.author ||
+        'Unknown') as string,
       icon: (unihubConfig.icon || metadata?.icon || 'M12 4v16m8-8H4') as string,
       category: (unihubConfig.category || metadata?.category || 'custom') as string,
-      keywords: (unihubConfig.keywords || metadata?.keywords || packageJson?.keywords || []) as string[]
+      keywords: (unihubConfig.keywords ||
+        metadata?.keywords ||
+        packageJson?.keywords ||
+        []) as string[]
     }
 
     console.log('[Browser Polyfill] 插件信息提取成功:', pluginMetadata)
-    return { id: pluginId, metadata: pluginMetadata, entryContent: entryFileContent, entryType, resources }
+    return {
+      id: pluginId,
+      metadata: pluginMetadata,
+      entryContent: entryFileContent,
+      entryType,
+      resources
+    }
   } catch (error) {
     console.error('[Browser Polyfill] 解压和解析插件包失败:', error)
     // 返回默认值

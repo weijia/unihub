@@ -372,7 +372,7 @@ const installNpmPlugin = async (): Promise<void> => {
 // 检查插件是否是 npm 插件
 const isNpmPlugin = (pluginId: string): boolean => {
   const npmPlugins = npmPluginManager.getAllSavedPlugins()
-  return npmPlugins.some(plugin => plugin.pluginId === pluginId)
+  return npmPlugins.some((plugin) => plugin.pluginId === pluginId)
 }
 
 const confirmUninstallNpm = async (): Promise<void> => {
@@ -393,7 +393,7 @@ const confirmUninstallNpm = async (): Promise<void> => {
 // 确认卸载（根据插件类型调用相应的方法）
 const confirmUninstall = async (): Promise<void> => {
   if (!pluginToUninstall.value) return
-  
+
   // 检查是否是 npm 插件
   if (isNpmPlugin(pluginToUninstall.value.id)) {
     await confirmUninstallNpm()
@@ -732,11 +732,7 @@ const confirmUninstall = async (): Promise<void> => {
 
         <DialogFooter>
           <Button variant="outline" @click="showUninstallDialog = false">取消</Button>
-          <Button
-            variant="destructive"
-            @click="confirmUninstall()"
-            >确认卸载</Button
-          >
+          <Button variant="destructive" @click="confirmUninstall()">确认卸载</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

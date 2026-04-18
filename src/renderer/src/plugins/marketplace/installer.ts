@@ -260,7 +260,10 @@ export class PluginInstaller {
               },
               mounted() {
                 console.log('🔧 [Installer] iframe 组件已挂载:', this.pluginId)
-                console.log('🔧 [Installer] iframe 内容预览:', this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : ''))
+                console.log(
+                  '🔧 [Installer] iframe 内容预览:',
+                  this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : '')
+                )
               },
               methods: {
                 onIframeLoadStart() {
@@ -272,7 +275,9 @@ export class PluginInstaller {
                   this.iframeLoading = false
                   // 获取 iframe 内容信息
                   try {
-                    const iframe = document.querySelector(`.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`) as HTMLIFrameElement
+                    const iframe = document.querySelector(
+                      `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
+                    ) as HTMLIFrameElement
                     if (iframe && iframe.contentDocument) {
                       const title = iframe.contentDocument.title || '无标题'
                       const headings = iframe.contentDocument.querySelectorAll('h1, h2, h3').length
