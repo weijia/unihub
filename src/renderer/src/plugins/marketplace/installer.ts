@@ -238,30 +238,46 @@ export class PluginInstaller {
                 '🔧 [Installer] iframe 内容预览:',
                 this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : '')
               )
-              // 检查 iframe 是否存在
-              this.$nextTick(() => {
-                console.log('🔧 [Installer] 检查 DOM 结构')
+              console.log('🔧 [Installer] 组件状态:', {
+                pluginId: this.pluginId,
+                htmlContentLength: this.htmlContent.length,
+                $el: this.$el,
+                $elExists: !!this.$el,
+                isInDOM: document.contains(this.$el)
+              })
+              // 延迟检查 DOM，确保渲染完成
+              setTimeout(() => {
+                console.log('🔧 [Installer] 延迟检查 DOM 结构')
                 console.log('🔧 [Installer] this.$el:', this.$el)
                 console.log('🔧 [Installer] this.$el.innerHTML:', this.$el.innerHTML)
-
-                // 先检查容器元素
+                
+                // 直接使用 this.$el 检查，而不是通过 document.querySelector
+                if (this.$el) {
+                  console.log('🔧 [Installer] 组件根元素存在')
+                  const iframe = this.$el.querySelector('iframe')
+                  console.log('🔧 [Installer] 直接查找 iframe:', iframe)
+                  if (iframe) {
+                    console.log('🔧 [Installer] iframe srcdoc:', (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置')
+                  }
+                }
+                
+                // 同时也通过选择器检查
                 const container = document.querySelector(
                   `.plugin-html-container[data-plugin-id="${this.pluginId}"]`
                 )
-                console.log('🔧 [Installer] 容器元素:', container)
+                console.log('🔧 [Installer] 容器元素 (通过选择器):', container)
                 if (container) {
                   console.log('🔧 [Installer] 容器内容:', container.innerHTML)
                 }
-
-                // 然后检查 iframe
+                
                 const iframe = document.querySelector(
                   `.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`
                 ) as HTMLIFrameElement
-                console.log('🔧 [Installer] iframe 元素:', iframe)
+                console.log('🔧 [Installer] iframe 元素 (通过选择器):', iframe)
                 if (iframe) {
-                  console.log('🔧 [Installer] iframe srcdoc:', iframe.srcdoc ? '已设置' : '未设置')
+                  console.log('🔧 [Installer] iframe srcdoc (通过选择器):', iframe.srcdoc ? '已设置' : '未设置')
                 }
-              })
+              }, 100)
             },
             methods: {
               onIframeLoadStart() {
