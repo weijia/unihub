@@ -52,6 +52,8 @@ export const api = {
           url: url,
           metadata: pluginInfo.metadata,
           entryContent: pluginInfo.entryContent,
+          entryType: pluginInfo.entryType,
+          resources: pluginInfo.resources,
           installedAt: new Date().toISOString()
         })
         localStorage.setItem('unihub_plugins', JSON.stringify(plugins))
@@ -60,7 +62,9 @@ export const api = {
           success: true,
           pluginId,
           metadata: pluginInfo.metadata,
-          entryContent: pluginInfo.entryContent
+          entryContent: pluginInfo.entryContent,
+          entryType: pluginInfo.entryType,
+          resources: pluginInfo.resources
         }
       } catch (error) {
         console.error('[Browser Polyfill] 下载失败:', error)
@@ -81,6 +85,8 @@ export const api = {
           filename: filename,
           metadata: pluginInfo.metadata,
           entryContent: pluginInfo.entryContent,
+          entryType: pluginInfo.entryType,
+          resources: pluginInfo.resources,
           installedAt: new Date().toISOString()
         })
         localStorage.setItem('unihub_plugins', JSON.stringify(plugins))
@@ -89,7 +95,9 @@ export const api = {
           success: true,
           pluginId,
           metadata: pluginInfo.metadata,
-          entryContent: pluginInfo.entryContent
+          entryContent: pluginInfo.entryContent,
+          entryType: pluginInfo.entryType,
+          resources: pluginInfo.resources
         }
       } catch (error) {
         console.error('[Browser Polyfill] 安装失败:', error)
@@ -128,7 +136,9 @@ export const api = {
             category: 'custom',
             keywords: []
           },
-          entryContent: p.entryContent
+          entryContent: p.entryContent,
+          entryType: p.entryType || 'html',
+          resources: p.resources || {}
         }))
       } catch (error) {
         console.error('[Browser Polyfill] 获取插件列表失败:', error)
@@ -956,11 +966,32 @@ export const versions = {
   chrome: 'browser'
 }
 
+// 根据文件扩展名获取 MIME 类型
+function getMimeType(path: string): string {
+  const ext = path.split('.').pop()?.toLowerCase() || ''
+  switch (ext) {
+    case 'js': return 'application/javascript'
+    case 'css': return 'text/css'
+    case 'html': return 'text/html'
+    case 'png': return 'image/png'
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg'
+    case 'gif': return 'image/gif'
+    case 'svg': return 'image/svg+xml'
+    case 'json': return 'application/json'
+    case 'woff': return 'font/woff'
+    case 'woff2': return 'font/woff2'
+    case 'ttf': return 'font/ttf'
+    case 'eot': return 'font/eot'
+    default: return 'application/octet-stream'
+  }
+}
+
 // 解压并解析插件包
 async function extractPluginInfo(
   buffer: Uint8Array | number[],
   source: string
-): Promise<{ id: string; metadata: any; entryContent: string | null }> {
+): Promise<{ id: string; metadata: any; entryContent: string | null; entryType: 'html' | 'js' | null; resources: Record<string, string> }> {
   console.log('[Browser Polyfill] 开始解压插件包:', source)
   try {
     // 创建 JSZip 实例
@@ -973,6 +1004,11 @@ async function extractPluginInfo(
     // 查找 package.json 文件
     let packageJsonContent: string | null = null
     let entryFileContent: string | null = null
+    let entryType: 'html' | 'js' | null = null
+    const resources: Record<string, string> = {}
+
+    // 临时存储需要处理的资源文件路径
+    const pendingResources: Array<{ path: string; zipFile: any }> = []
 
     // 遍历所有文件
     for (const [path, file] of Object.entries(loadedZip.files)) {
@@ -987,12 +1023,65 @@ async function extractPluginInfo(
           console.log('[Browser Polyfill] 读取 package.json 成功')
         }
 
-        // 读取入口文件（index.js 或 main.js）
+        // 读取入口文件（index.html 或 dist/index.html）
+        if (path === 'index.html' || path === 'dist/index.html') {
+          entryFileContent = await zipFile.async('string')
+          entryType = 'html'
+          console.log('[Browser Polyfill] 读取入口文件成功:', path, '(HTML)')
+        }
+
+        // 读取 JavaScript 入口文件
         if (path === 'dist/index.js' || path === 'index.js' || path === 'main.js') {
           entryFileContent = await zipFile.async('string')
-          console.log('[Browser Polyfill] 读取入口文件成功:', path)
+          entryType = 'js'
+          console.log('[Browser Polyfill] 读取入口文件成功:', path, '(JS)')
+        }
+
+        // 收集资源文件路径，等入口文件加载完成后再处理
+        if (path.startsWith('assets/') || path.startsWith('dist/assets/')) {
+          pendingResources.push({ path, zipFile })
         }
       }
+    }
+
+    // 在入口文件加载完成后，统一处理资源文件
+    if (entryFileContent) {
+      for (const { path, zipFile } of pendingResources) {
+        const content = await zipFile.async('base64')
+        const mimeType = getMimeType(path)
+        resources[path] = `data:${mimeType};base64,${content}`
+        console.log('[Browser Polyfill] 存储资源文件:', path)
+      }
+    }
+
+    // 如果入口文件是 HTML，替换其中的相对路径为 data URI
+    if (entryFileContent && entryType === 'html' && Object.keys(resources).length > 0) {
+      let processedContent = entryFileContent
+      for (const [path, dataUri] of Object.entries(resources)) {
+        // 处理 dist/assets/ 路径
+        const distPath = path.replace(/^dist\//, '')
+        // 替换 HTML 中的相对路径
+        processedContent = processedContent.replace(
+          new RegExp(`(src|href|url)\s*=\s*["']${distPath.replace(/\//g, '\\/')}["']`, 'g'),
+          `$1="${dataUri}"`
+        )
+        // 处理可能的相对路径格式
+        const relativePath = './' + distPath
+        processedContent = processedContent.replace(
+          new RegExp(`(src|href|url)\s*=\s*["']${relativePath.replace(/\//g, '\\/')}["']`, 'g'),
+          `$1="${dataUri}"`
+        )
+        // 处理 ../assets/ 格式
+        if (distPath.startsWith('assets/')) {
+          const parentRelativePath = '../' + distPath
+          processedContent = processedContent.replace(
+            new RegExp(`(src|href|url)\s*=\s*["']${parentRelativePath.replace(/\//g, '\\/')}["']`, 'g'),
+            `$1="${dataUri}"`
+          )
+        }
+      }
+      entryFileContent = processedContent
+      console.log('[Browser Polyfill] HTML 资源路径已替换为 data URI')
     }
 
     // 解析 package.json
@@ -1029,26 +1118,29 @@ async function extractPluginInfo(
       }
     }
 
+    // 从 package.json 的 unihub 字段读取 metadata
+    const unihubConfig = packageJson?.unihub || {}
+
     // 构建插件信息
-    const pluginId = (metadata?.id || packageJson?.name || 'plugin_' + Date.now()) as string
+    const pluginId = (unihubConfig.id || metadata?.id || packageJson?.name || 'plugin_' + Date.now()) as string
     const pluginMetadata = {
       id: pluginId,
-      name: (metadata?.name ||
+      name: (unihubConfig.name || metadata?.name ||
         packageJson?.name ||
         source.split('/').pop()?.replace('.zip', '') ||
         'Unknown Plugin') as string,
-      description: (metadata?.description ||
+      description: (unihubConfig.description || metadata?.description ||
         packageJson?.description ||
         'Installed from ' + source) as string,
-      version: (metadata?.version || packageJson?.version || '1.0.0') as string,
-      author: (metadata?.author || packageJson?.author || 'Unknown') as string,
-      icon: (metadata?.icon || 'M12 4v16m8-8H4') as string,
-      category: (metadata?.category || 'custom') as string,
-      keywords: (metadata?.keywords || packageJson?.keywords || []) as string[]
+      version: (unihubConfig.version || metadata?.version || packageJson?.version || '1.0.0') as string,
+      author: (unihubConfig.author || metadata?.author || packageJson?.author || 'Unknown') as string,
+      icon: (unihubConfig.icon || metadata?.icon || 'M12 4v16m8-8H4') as string,
+      category: (unihubConfig.category || metadata?.category || 'custom') as string,
+      keywords: (unihubConfig.keywords || metadata?.keywords || packageJson?.keywords || []) as string[]
     }
 
     console.log('[Browser Polyfill] 插件信息提取成功:', pluginMetadata)
-    return { id: pluginId, metadata: pluginMetadata, entryContent: entryFileContent }
+    return { id: pluginId, metadata: pluginMetadata, entryContent: entryFileContent, entryType, resources }
   } catch (error) {
     console.error('[Browser Polyfill] 解压和解析插件包失败:', error)
     // 返回默认值
@@ -1065,7 +1157,9 @@ async function extractPluginInfo(
         category: 'custom',
         keywords: []
       },
-      entryContent: null
+      entryContent: null,
+      entryType: null,
+      resources: {}
     }
   }
 }
