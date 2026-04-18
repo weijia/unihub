@@ -231,6 +231,9 @@ export class PluginInstaller {
           if (entryType === 'html' && entryContent) {
             // HTML 入口文件：使用 iframe 渲染
             console.log('🔧 [Installer] 使用 HTML 入口文件渲染')
+            console.log('🔧 [Installer] HTML 内容长度:', entryContent.length)
+            console.log('🔧 [Installer] 插件 ID:', metadata.id)
+            console.log('🔧 [Installer] 插件名称:', metadata.name)
             component = {
               template: `
                 <div class="w-full h-full plugin-html-container" :data-plugin-id="pluginId">
@@ -239,6 +242,9 @@ export class PluginInstaller {
                     class="w-full h-full border-0"
                     sandbox="allow-scripts allow-same-origin"
                     @load="onIframeLoad"
+                    @error="onIframeError"
+                    @loadstart="onIframeLoadStart"
+                    @loadend="onIframeLoadEnd"
                   ></iframe>
                 </div>
               `,
@@ -247,12 +253,48 @@ export class PluginInstaller {
                   pluginName: metadata.name as string,
                   pluginId: metadata.id as string,
                   pluginVersion: metadata.version as string,
-                  htmlContent: entryContent as string
+                  htmlContent: entryContent as string,
+                  iframeLoading: false,
+                  iframeError: null
                 }
               },
+              mounted() {
+                console.log('🔧 [Installer] iframe 组件已挂载:', this.pluginId)
+                console.log('🔧 [Installer] iframe 内容预览:', this.htmlContent.substring(0, 100) + (this.htmlContent.length > 100 ? '...' : ''))
+              },
               methods: {
+                onIframeLoadStart() {
+                  console.log('🔧 [Installer] iframe 开始加载:', this.pluginId)
+                  this.iframeLoading = true
+                },
                 onIframeLoad() {
                   console.log('🔧 [Installer] HTML 插件 iframe 加载完成:', this.pluginId)
+                  this.iframeLoading = false
+                  // 获取 iframe 内容信息
+                  try {
+                    const iframe = document.querySelector(`.plugin-html-container[data-plugin-id="${this.pluginId}"] iframe`) as HTMLIFrameElement
+                    if (iframe && iframe.contentDocument) {
+                      const title = iframe.contentDocument.title || '无标题'
+                      const headings = iframe.contentDocument.querySelectorAll('h1, h2, h3').length
+                      console.log('🔧 [Installer] iframe 内容信息:', {
+                        pluginId: this.pluginId,
+                        title,
+                        headingsCount: headings,
+                        url: iframe.srcdoc ? 'srcdoc' : iframe.src
+                      })
+                    }
+                  } catch (error) {
+                    console.warn('🔧 [Installer] 获取 iframe 内容信息失败:', error)
+                  }
+                },
+                onIframeLoadEnd() {
+                  console.log('🔧 [Installer] iframe 加载结束:', this.pluginId)
+                  this.iframeLoading = false
+                },
+                onIframeError(event: Event) {
+                  console.error('🔧 [Installer] iframe 加载错误:', this.pluginId, event)
+                  this.iframeError = event
+                  this.iframeLoading = false
                 }
               }
             }
