@@ -122,10 +122,8 @@ export class WebContentsViewManager {
       }
     })
 
-    // 开发模式下打开 DevTools（已禁用）
-    // if (process.env.NODE_ENV === 'development') {
-    //   view.webContents.openDevTools({ mode: 'detach' })
-    // }
+    // 强制打开 DevTools
+    view.webContents.openDevTools({ mode: 'detach' })
 
     // 监听控制台消息（仅开发模式）
     if (process.env.NODE_ENV === 'development') {

@@ -224,19 +224,19 @@ export class PluginInstaller {
           console.log('🔧 [Installer] 创建浏览器环境插件组件:', metadata.name as string)
 
           // 尝试从入口文件内容创建组件
-          if (pluginInfo.entryContent) {
+          if ('entryContent' in pluginInfo && typeof pluginInfo.entryContent === 'string') {
             console.log('🔧 [Installer] 尝试使用插件入口文件创建组件')
             try {
               // 解析入口文件内容，提取插件对象
-              const entryContent = pluginInfo.entryContent
+              const entryContent = pluginInfo.entryContent as string
 
               // 尝试使用 eval 执行入口文件内容
-              const module = { exports: {} }
+              const module = { exports: {} } as { exports: any }
               const require = (name: string) => {
                 if (name === 'vue') {
                   // 在浏览器环境中，Vue 应该已经在全局环境中可用
-                  if (window.Vue) {
-                    return window.Vue
+                  if ((window as any).Vue) {
+                    return (window as any).Vue
                   } else {
                     throw new Error('Vue is not available in global scope')
                   }

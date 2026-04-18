@@ -13,6 +13,7 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev --sourcemap",
+    "dev:debug": "set NODE_ENV=development && electron-vite dev --sourcemap",
     "build": "npm run typecheck && electron-vite build",
     "build:fast": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",

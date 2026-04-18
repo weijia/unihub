@@ -207,6 +207,10 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
+    // 强制打开主窗口的 DevTools
+    if (mainWindow) {
+      mainWindow.webContents.openDevTools({ mode: 'detach' })
+    }
     // 设置主窗口到 WebContentsView 管理器
     if (mainWindow) {
       webContentsViewManager.setMainWindow(mainWindow)
