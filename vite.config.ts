@@ -11,13 +11,23 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src/renderer/src'),
-      vue: 'vue/dist/vue.esm-bundler.js'
+      vue: 'vue/dist/vue.esm-bundler.js',
+      // PouchDB 浏览器兼容
+      stream: 'stream-browserify'
     }
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     // 模拟 Electron 环境变量
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    // PouchDB 浏览器兼容
+    'process.env.POUCHDB_NAME': JSON.stringify('unihub-settings'),
+    'global': 'window',
+    'process': JSON.stringify({
+      env: {
+        NODE_ENV: process.env.NODE_ENV || 'development'
+      }
+    })
   },
   plugins: [
     vue(),
