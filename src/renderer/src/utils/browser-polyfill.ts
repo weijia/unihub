@@ -677,7 +677,7 @@ export const api = {
       try {
         // 获取设置
         const settings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
-        
+
         if (!settings.sync?.enabled) {
           return { success: false, message: '同步未启用' }
         }
@@ -696,17 +696,17 @@ export const api = {
         // 实际执行同步操作
         // 1. 读取本地设置
         const localSettings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
-        
+
         // 2. 将设置保存到 WebDAV
         const settingsContent = JSON.stringify(localSettings, null, 2)
-        await webdavFs.writeFile('/unihub-settings.json', settingsContent, { 
-          overwrite: true, 
-          contentType: 'application/json' 
+        await webdavFs.writeFile('/unihub-settings.json', settingsContent, {
+          overwrite: true,
+          contentType: 'application/json'
         })
 
         // 3. 从 WebDAV 读取最新设置
-        const remoteSettingsContent = await webdavFs.readFile('/unihub-settings.json', { 
-          responseType: 'text' 
+        const remoteSettingsContent = await webdavFs.readFile('/unihub-settings.json', {
+          responseType: 'text'
         })
         const remoteSettings = JSON.parse(remoteSettingsContent as string)
 
@@ -724,7 +724,7 @@ export const api = {
 
         // 存储同步状态
         localStorage.setItem('unihub_sync_status', JSON.stringify(syncStatus))
-        
+
         console.log('[Browser Polyfill] 同步成功')
         return { success: true, message: '同步成功' }
       } catch (error) {

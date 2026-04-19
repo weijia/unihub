@@ -98,12 +98,13 @@ export class SyncManager {
       try {
         const doc = await this.db.get(category.id)
         const categoryKey = category.key as keyof typeof settings
-        
+
         // 比较时间戳，决定是否更新本地设置
-        const localUpdatedAt = (settings as any)[`${categoryKey}UpdatedAt`] || new Date(0).toISOString()
+        const localUpdatedAt =
+          (settings as any)[`${categoryKey}UpdatedAt`] || new Date(0).toISOString()
         if (doc.updatedAt > localUpdatedAt) {
-          (settings as any)[categoryKey] = doc.data
-          (settings as any)[`${categoryKey}UpdatedAt`] = doc.updatedAt
+          ;(settings as any)[categoryKey] = doc.data(settings as any)[`${categoryKey}UpdatedAt`] =
+            doc.updatedAt
           hasUpdates = true
         }
       } catch (error: any) {
@@ -219,7 +220,7 @@ export class SyncManager {
       logger.info('开始同步配置')
 
       const settings = settingsManager.getAll()
-      
+
       if (!settings.sync.enabled) {
         return { success: false, message: '同步未启用' }
       }
