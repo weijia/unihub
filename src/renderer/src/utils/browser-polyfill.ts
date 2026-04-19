@@ -633,18 +633,6 @@ export const api = {
           message: error instanceof Error ? error.message : '移除插件快捷键失败'
         }
       }
-    },
-    update: async (partial: any) => {
-      console.log('[Browser Polyfill] settings.update:', partial)
-      try {
-        const settings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
-        Object.assign(settings, partial)
-        localStorage.setItem('unihub_settings', JSON.stringify(settings))
-        return { success: true }
-      } catch (error) {
-        console.error('[Browser Polyfill] 更新设置失败:', error)
-        return { success: false, message: error instanceof Error ? error.message : '更新设置失败' }
-      }
     }
   },
   sync: {

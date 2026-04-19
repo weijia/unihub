@@ -30,7 +30,8 @@ export default defineConfig({
     },
     build: {
       outDir: 'out/renderer',
-      target: 'chrome120'
+      target: 'chrome120',
+      sourcemap: true
     },
     server: {
       port: 3000,

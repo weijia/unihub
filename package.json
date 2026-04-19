@@ -28,8 +28,11 @@
     "icons": "node scripts/generate-icons.mjs",
     "sync-plugins": "node scripts/sync-plugins-from-remote.mjs",
     "dev:web": "set BUILD_TARGET=web && npx electron-vite dev",
+    "dev:web:debug": "set BUILD_TARGET=web && npx vite build --config vite.config.ts --mode development && npx vite preview --config vite.config.ts --port 3001",
     "build:web": "set BUILD_TARGET=web && npx vite build --config vite.config.ts",
-    "preview:web": "npx vite preview --config vite.config.ts"
+    "build:web:debug": "set BUILD_TARGET=web && npx vite build --config vite.config.ts --sourcemap",
+    "preview:web": "npx vite preview --config vite.config.ts",
+    "preview:web:debug": "npx vite preview --config vite.config.ts --port 3001"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

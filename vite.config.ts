@@ -142,6 +142,9 @@ export default defineConfig({
           if (id.includes('node_modules/prettier')) {
             return 'prettier'
           }
+          if (id.includes('node_modules/pouchdb') || id.includes('node_modules/universal-sync-v2')) {
+            return 'sync-libs'
+          }
           if (id.includes('node_modules')) {
             return 'vendor'
           }
@@ -154,7 +157,7 @@ export default defineConfig({
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1500,
     reportCompressedSize: false,
-    sourcemap: false,
+    sourcemap: true,
     assetsInlineLimit: 4096,
     cssMinify: 'esbuild'
   },
