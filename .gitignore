@@ -16,3 +16,4 @@ stats-api/.vercel
 unihub-plugin-counter/unihub-plugin-counter.zip
 electron.vite.config.*.mjs
 test-environment.js
+unihub-settings

@@ -252,6 +252,7 @@ const isFirstRun = useLocalStorageBoolean('isFirstRun', true)
 src/
 ├── main/
 │   ├── settings-manager.ts     # 主进程配置管理器
+│   ├── sync-manager.ts         # 配置同步管理器
 │   └── index.ts                # IPC 接口实现
 └── renderer/
     ├── src/
@@ -262,6 +263,123 @@ src/
     └── src/components/
         └── settings/           # 设置界面组件
 ```
+
+## 12. 配置同步功能
+
+### 12.1 同步架构
+
+UniHub 支持通过 WebDAV 实现配置的跨设备同步，使用以下技术栈：
+
+- **存储引擎**：PouchDB（本地存储）
+- **同步库**：universal-sync-v2（同步逻辑）
+- **WebDAV 客户端**：zen-fs-webdav（远程存储连接）
+
+### 12.2 同步流程
+
+1. **初始化**：应用启动时初始化 SyncManager，从 PouchDB 加载设置
+2. **同步执行**：
+   - 从 WebDAV 同步数据到 PouchDB
+   - 从 PouchDB 加载最新设置到内存
+   - 将本地设置存储到 PouchDB
+   - 再次同步到 WebDAV，确保所有更改都已上传
+3. **冲突解决**：使用时间戳进行冲突解决，时间戳较新的配置优先
+4. **自动同步**：根据配置的时间间隔（默认5分钟）自动执行同步
+
+### 12.3 同步配置
+
+```typescript
+interface SyncConfig {
+  enabled: boolean
+  webdav: {
+    url: string
+    username: string
+    password: string
+    syncInterval: number // 同步间隔（分钟）
+  }
+}
+```
+
+### 12.4 同步状态
+
+同步过程中维护以下状态：
+
+```typescript
+interface SyncStatus {
+  enabled: boolean
+  lastSync: string | null
+  status: 'idle' | 'syncing' | 'success' | 'error'
+  error?: string
+}
+```
+
+### 12.5 核心方法
+
+| 方法名 | 功能描述 | 参数 | 返回值 |
+|--------|----------|------|--------|
+| `init()` | 初始化同步管理器 | 无 | `Promise<void>` |
+| `sync()` | 执行同步操作 | 无 | `Promise<{ success: boolean; message?: string }>` |
+| `startAutoSync()` | 启动自动同步 | 无 | `void` |
+| `stopAutoSync()` | 停止自动同步 | 无 | `void` |
+| `getSyncStatus()` | 获取同步状态 | 无 | `SyncStatus` |
+| `updateSyncConfig()` | 更新同步配置 | 无 | `void` |
+| `cleanup()` | 清理资源 | 无 | `void` |
+
+### 12.6 配置存储结构
+
+配置在 PouchDB 中按类别存储，每个类别对应一个文档：
+
+| 文档 ID | 存储内容 |
+|---------|----------|
+| `settings:shortcuts` | 快捷键设置 |
+| `settings:pluginShortcuts` | 插件快捷键设置 |
+| `settings:general` | 通用设置 |
+| `settings:appearance` | 外观设置 |
+| `settings:sync` | 同步设置 |
+
+每个文档包含以下结构：
+
+```typescript
+{
+  _id: string,         // 文档ID
+  data: any,           // 配置数据
+  updatedAt: string     // 更新时间戳
+}
+```
+
+### 12.7 WebDAV 适配器
+
+为了与 universal-sync-v2 库兼容，实现了 WebDAV 文件系统适配器，提供以下接口：
+
+- `access()`：检查文件是否存在
+- `writeFile()`：写入文件
+- `readFile()`：读取文件
+- `mkdir()`：创建目录
+- `readdir()`：读取目录内容
+- `unlink()`：删除文件
+- `rm()`：删除目录
+- `stat()`：获取文件状态
+- `rename()`：重命名文件
+- `exists()`：检查路径是否存在
+
+### 12.8 集成与通信
+
+#### 12.8.1 主进程集成
+
+- 应用启动时初始化 SyncManager：`await syncManager.init()`
+- 应用退出前清理资源：`syncManager.cleanup()`
+- 配置更新时更新同步配置：`syncManager.updateSyncConfig()`
+
+#### 12.8.2 IPC 接口
+
+通过 `settings:update` IPC 接口更新配置时，会自动调用 `syncManager.updateSyncConfig()` 来更新同步配置。
+
+### 12.9 错误处理
+
+- 同步过程中的错误会被捕获并记录到日志
+- 同步状态会更新为 `error`，并保存错误信息
+- 即使同步失败，应用仍能正常运行，使用本地配置
+
+**文件路径**：`src/main/sync-manager.ts`
 
 ## 13. 总结
 

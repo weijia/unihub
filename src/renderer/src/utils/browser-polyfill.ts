@@ -1,6 +1,8 @@
 // Browser polyfill for Electron API
 import JSZip from 'jszip'
 import { createWebDAVFileSystem } from 'zen-fs-webdav'
+import { sync } from 'universal-sync-v2'
+import PouchDB from 'pouchdb'
 
 // 模拟 electronAPI
 export const electronAPI = {
@@ -686,6 +688,42 @@ export const api = {
           return { success: false, message: 'WebDAV URL 未配置' }
         }
 
+        // 创建 PouchDB 实例
+        const db = new PouchDB('unihub-settings')
+
+        // 按类别存储设置到 PouchDB
+        const categories = [
+          { id: 'settings:shortcuts', data: settings.shortcuts },
+          { id: 'settings:pluginShortcuts', data: settings.pluginShortcuts },
+          { id: 'settings:general', data: settings.general },
+          { id: 'settings:appearance', data: settings.appearance },
+          { id: 'settings:sync', data: settings.sync }
+        ]
+
+        for (const category of categories) {
+          try {
+            // 尝试获取现有文档
+            const doc = await db.get(category.id)
+            // 更新文档
+            await db.put({
+              ...doc,
+              data: category.data,
+              updatedAt: new Date().toISOString()
+            })
+          } catch (error: any) {
+            // 文档不存在，创建新文档
+            if (error.name === 'not_found') {
+              await db.put({
+                _id: category.id,
+                data: category.data,
+                updatedAt: new Date().toISOString()
+              })
+            } else {
+              console.error(`[Browser Polyfill] 存储 ${category.id} 失败:`, error)
+            }
+          }
+        }
+
         // 创建 WebDAV 文件系统实例
         const webdavFs = createWebDAVFileSystem({
           baseUrl: settings.sync.webdav.url,
@@ -693,26 +731,149 @@ export const api = {
           password: settings.sync.webdav.password || ''
         })
 
-        // 实际执行同步操作
-        // 1. 读取本地设置
-        const localSettings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
+        // 创建 WebDAV 适配器
+        const fsAdapter = {
+          access: async (path: string) => {
+            try {
+              const exists = await webdavFs.exists(path)
+              if (!exists) {
+                throw new Error('File not found')
+              }
+            } catch (error) {
+              throw error
+            }
+          },
+          writeFile: async (path: string, data: any) => {
+            try {
+              await webdavFs.writeFile(path, data, { overwrite: true, contentType: 'application/json' })
+            } catch (error) {
+              throw error
+            }
+          },
+          readFile: async (path: string) => {
+            try {
+              const content = await webdavFs.readFile(path, { responseType: 'text' })
+              return content as string
+            } catch (error) {
+              throw error
+            }
+          },
+          mkdir: async (path: string) => {
+            try {
+              await webdavFs.mkdir(path, { recursive: true })
+            } catch (error) {
+              throw error
+            }
+          },
+          readdir: async (path: string) => {
+            try {
+              const entries = await webdavFs.readDir(path)
+              return entries.map((entry: any) => entry.name)
+            } catch (error) {
+              throw error
+            }
+          },
+          unlink: async (path: string) => {
+            try {
+              await webdavFs.unlink(path)
+            } catch (error) {
+              throw error
+            }
+          },
+          rm: async (path: string, options: any) => {
+            try {
+              await webdavFs.rm(path, { recursive: options?.recursive || false })
+            } catch (error) {
+              throw error
+            }
+          },
+          stat: async (path: string) => {
+            try {
+              const stats = await webdavFs.stat(path)
+              return {
+                isFile: () => stats.isFile,
+                isDirectory: () => stats.isDirectory,
+                size: stats.size,
+                mtime: stats.lastModified || new Date()
+              }
+            } catch (error) {
+              throw error
+            }
+          },
+          rename: async (oldPath: string, newPath: string) => {
+            try {
+              await webdavFs.move(oldPath, newPath, { overwrite: true })
+            } catch (error) {
+              throw error
+            }
+          },
+          exists: async (path: string) => {
+            try {
+              return await webdavFs.exists(path)
+            } catch (error) {
+              return false
+            }
+          }
+        }
 
-        // 2. 将设置保存到 WebDAV
-        const settingsContent = JSON.stringify(localSettings, null, 2)
-        await webdavFs.writeFile('/unihub-settings.json', settingsContent, {
-          overwrite: true,
-          contentType: 'application/json'
-        })
+        // 1. 先从 WebDAV 同步数据到 PouchDB
+        await sync(db, fsAdapter, '/')
 
-        // 3. 从 WebDAV 读取最新设置
-        const remoteSettingsContent = await webdavFs.readFile('/unihub-settings.json', {
-          responseType: 'text'
-        })
-        const remoteSettings = JSON.parse(remoteSettingsContent as string)
+        // 2. 从 PouchDB 加载最新设置
+        const categoriesToLoad = [
+          { id: 'settings:shortcuts', key: 'shortcuts' },
+          { id: 'settings:pluginShortcuts', key: 'pluginShortcuts' },
+          { id: 'settings:general', key: 'general' },
+          { id: 'settings:appearance', key: 'appearance' },
+          { id: 'settings:sync', key: 'sync' }
+        ]
 
-        // 4. 合并设置（使用时间戳或版本号进行冲突解决）
-        // 这里简化处理，直接使用远程设置
-        localStorage.setItem('unihub_settings', JSON.stringify(remoteSettings))
+        let hasUpdates = false
+        for (const category of categoriesToLoad) {
+          try {
+            const doc = await db.get(category.id)
+            if (!settings[category.key] || doc.updatedAt > (settings[`${category.key}UpdatedAt`] || new Date(0).toISOString())) {
+              settings[category.key] = doc.data
+              settings[`${category.key}UpdatedAt`] = doc.updatedAt
+              hasUpdates = true
+            }
+          } catch (error: any) {
+            // 文档不存在时忽略
+            if (error.name !== 'not_found') {
+              console.error(`[Browser Polyfill] 加载 ${category.id} 失败:`, error)
+            }
+          }
+        }
+
+        if (hasUpdates) {
+          localStorage.setItem('unihub_settings', JSON.stringify(settings))
+        }
+
+        // 3. 将本地设置存储到 PouchDB
+        for (const category of categories) {
+          try {
+            const doc = await db.get(category.id)
+            await db.put({
+              ...doc,
+              data: category.data,
+              updatedAt: new Date().toISOString()
+            })
+          } catch (error: any) {
+            if (error.name === 'not_found') {
+              await db.put({
+                _id: category.id,
+                data: category.data,
+                updatedAt: new Date().toISOString()
+              })
+            }
+          }
+        }
+
+        // 4. 再次同步到 WebDAV，确保所有更改都已上传
+        await sync(db, fsAdapter, '/')
+
+        // 关闭 PouchDB 连接
+        await db.close()
 
         // 更新同步状态
         const syncStatus = {
