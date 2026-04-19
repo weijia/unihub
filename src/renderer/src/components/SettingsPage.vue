@@ -123,14 +123,27 @@ const loadSettings = async (): Promise<void> => {
     const settingsData = typeof data === 'object' && data !== null ? data : {}
     // 确保 settings 结构完整
     settings.value = {
-      ...settings.value,
-      ...settingsData,
+      shortcuts: {
+        toggleWindow: settingsData.shortcuts?.toggleWindow || '',
+        globalSearch: settingsData.shortcuts?.globalSearch || ''
+      },
+      pluginShortcuts: settingsData.pluginShortcuts || [],
+      general: {
+        launchAtStartup: settingsData.general?.launchAtStartup ?? false,
+        minimizeToTray: settingsData.general?.minimizeToTray ?? true,
+        language: settingsData.general?.language || 'zh-CN'
+      },
+      appearance: {
+        theme: settingsData.appearance?.theme || 'system',
+        sidebarWidth: settingsData.appearance?.sidebarWidth || 208
+      },
       sync: {
-        ...settings.value.sync,
-        ...(settingsData as any).sync,
+        enabled: settingsData.sync?.enabled ?? false,
         webdav: {
-          ...settings.value.sync.webdav,
-          ...(settingsData as any).sync?.webdav
+          url: settingsData.sync?.webdav?.url || '',
+          username: settingsData.sync?.webdav?.username || '',
+          password: settingsData.sync?.webdav?.password || '',
+          syncInterval: settingsData.sync?.webdav?.syncInterval || 5
         }
       }
     }
