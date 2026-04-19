@@ -20,6 +20,7 @@ import { registerDevModeHandlers } from './ipc-handlers'
 import { webContentsViewManager } from './webcontents-view-manager'
 import { shortcutManager } from './shortcut-manager'
 import { settingsManager } from './settings-manager'
+import { syncManager } from './sync-manager'
 import type { AppSettings } from './settings-manager'
 import { lmdbManager } from './lmdb-manager'
 import { searchWindowManager } from './search-window-manager'
@@ -359,6 +360,9 @@ app.whenReady().then(async () => {
   // 启动时应用通用设置（开机自启动/最小化到托盘）
   applyGeneralSettings(getGeneralSettings())
 
+  // 初始化同步管理器
+  await syncManager.init()
+
   // 异步初始化插件系统（不阻塞窗口显示）
   setImmediate(() => {
     const pluginInitStart = performance.now()
@@ -415,6 +419,8 @@ app.on('before-quit', async () => {
   isQuitting = true
   // 清理所有快捷键
   shortcutManager.cleanup()
+  // 清理同步管理器
+  syncManager.cleanup()
   // 关闭日志系统
   try {
     await closeLogger()
@@ -656,6 +662,9 @@ function setupIpcHandlers(): void {
     if (partial.pluginShortcuts) {
       resyncPluginShortcuts()
     }
+    if (partial.sync) {
+      syncManager.updateSyncConfig()
+    }
     return { success: true }
   })
 
@@ -668,6 +677,27 @@ function setupIpcHandlers(): void {
     applyGeneralSettings(settingsManager.getGeneral())
     // 重新注册默认快捷键
     registerGlobalShortcuts()
+    // 更新同步配置
+    syncManager.updateSyncConfig()
+    return { success: true }
+  })
+
+  // 同步相关 IPC
+  ipcMain.handle('sync:status', () => {
+    return syncManager.getSyncStatus()
+  })
+
+  ipcMain.handle('sync:trigger', async () => {
+    return await syncManager.sync()
+  })
+
+  ipcMain.handle('sync:start', () => {
+    syncManager.startAutoSync()
+    return { success: true }
+  })
+
+  ipcMain.handle('sync:stop', () => {
+    syncManager.stopAutoSync()
     return { success: true }
   })
 

@@ -53,6 +53,15 @@ interface Settings {
     theme: 'system' | 'light' | 'dark'
     sidebarWidth: number
   }
+  sync: {
+    enabled: boolean
+    webdav: {
+      url: string
+      username: string
+      password: string
+      syncInterval: number
+    }
+  }
 }
 
 // 更新信息类型
@@ -197,6 +206,17 @@ declare global {
           limit?: number
         ) => Promise<Array<{ pluginId: string; lastAccessedAt: number; accessCount: number }>>
         clearRecents: () => Promise<ApiResponse>
+      }
+      sync: {
+        status: () => Promise<{
+          enabled: boolean
+          lastSync: string | null
+          status: 'idle' | 'syncing' | 'success' | 'error'
+          error: string | undefined
+        }>
+        trigger: () => Promise<ApiResponse>
+        start: () => Promise<ApiResponse>
+        stop: () => Promise<ApiResponse>
       }
       tab: {
         showContextMenu: (tabId: string, index: number, total: number) => Promise<ApiResponse>

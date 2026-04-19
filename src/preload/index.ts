@@ -163,6 +163,12 @@ const api = {
     getRecents: (limit?: number) => ipcRenderer.invoke('db:getRecents', limit),
     clearRecents: () => ipcRenderer.invoke('db:clearRecents')
   },
+  sync: {
+    status: () => ipcRenderer.invoke('sync:status'),
+    trigger: () => ipcRenderer.invoke('sync:trigger'),
+    start: () => ipcRenderer.invoke('sync:start'),
+    stop: () => ipcRenderer.invoke('sync:stop')
+  },
   tab: {
     showContextMenu: (tabId: string, index: number, total: number) =>
       ipcRenderer.invoke('tab:show-context-menu', tabId, index, total)

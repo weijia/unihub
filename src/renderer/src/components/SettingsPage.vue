@@ -51,6 +51,15 @@ interface Settings {
     theme: 'light' | 'dark' | 'system'
     sidebarWidth: number
   }
+  sync: {
+    enabled: boolean
+    webdav: {
+      url: string
+      username: string
+      password: string
+      syncInterval: number
+    }
+  }
 }
 
 const settings = ref<Settings>({
@@ -67,6 +76,15 @@ const settings = ref<Settings>({
   appearance: {
     theme: 'system',
     sidebarWidth: 208
+  },
+  sync: {
+    enabled: false,
+    webdav: {
+      url: '',
+      username: '',
+      password: '',
+      syncInterval: 5
+    }
   }
 })
 
@@ -98,9 +116,25 @@ let pluginEventHandler: (() => void) | null = null
 const loadSettings = async (): Promise<void> => {
   try {
     console.log('加载设置')
-    const data = await window.api.settings.getAll()
-    settings.value = data
-    console.log('设置加载成功', data)
+    const result = await window.api.settings.getAll()
+    // 处理不同环境的返回格式
+    const data = 'data' in result ? result.data : result
+    // 确保 data 是对象
+    const settingsData = typeof data === 'object' && data !== null ? data : {}
+    // 确保 settings 结构完整
+    settings.value = {
+      ...settings.value,
+      ...settingsData,
+      sync: {
+        ...settings.value.sync,
+        ...(settingsData as any).sync,
+        webdav: {
+          ...settings.value.sync.webdav,
+          ...(settingsData as any).sync?.webdav
+        }
+      }
+    }
+    console.log('设置加载成功', settings.value)
   } catch (error) {
     console.error('加载设置失败', error)
   }
@@ -341,7 +375,116 @@ const cancelRecording = (): void => {
   recordedKeys.value = []
 }
 
-// 重置设置
+// 同步状态
+const syncStatus = ref({
+  enabled: false,
+  lastSync: null as string | null,
+  status: 'idle' as 'idle' | 'syncing' | 'success' | 'error',
+  error: undefined as string | undefined
+})
+
+// 加载同步状态
+const loadSyncStatus = async (): Promise<void> => {
+  try {
+    const result = await window.api.sync.status()
+    // 处理不同环境的返回格式
+    const status = 'data' in result ? result.data : result
+    if (status && typeof status === 'object') {
+      const statusObj = status as any
+      syncStatus.value = {
+        enabled: statusObj.enabled || false,
+        lastSync: statusObj.lastSync || null,
+        status: statusObj.status || 'idle',
+        error: statusObj.error || undefined
+      }
+    }
+  } catch (error) {
+    console.error('加载同步状态失败', error)
+  }
+}
+
+// 保存同步设置
+const saveSyncSetting = async <K extends keyof Settings['sync']>(
+  key: K,
+  value: Settings['sync'][K]
+): Promise<void> => {
+  try {
+    await window.api.settings.update({
+      sync: {
+        ...settings.value.sync,
+        [key]: value
+      }
+    })
+    settings.value.sync[key] = value
+    toast.success('同步设置已保存')
+    // 重新加载同步状态
+    await loadSyncStatus()
+  } catch (error) {
+    console.error('保存同步设置失败', error)
+    toast.error('保存同步设置失败')
+  }
+}
+
+// 保存 WebDAV 设置
+const saveWebDavSetting = async <K extends keyof Settings['sync']['webdav']>(
+  key: K,
+  value: Settings['sync']['webdav'][K]
+): Promise<void> => {
+  try {
+    await window.api.settings.update({
+      sync: {
+        ...settings.value.sync,
+        webdav: {
+          ...(settings.value.sync?.webdav || {}),
+          [key]: value
+        }
+      }
+    })
+    // 确保 sync 和 webdav 对象存在
+    if (!settings.value.sync) {
+      settings.value.sync = { 
+        enabled: false, 
+        webdav: { 
+          url: '', 
+          username: '', 
+          password: '', 
+          syncInterval: 5 
+        } 
+      }
+    }
+    if (!settings.value.sync.webdav) {
+      settings.value.sync.webdav = { 
+        url: '', 
+        username: '', 
+        password: '', 
+        syncInterval: 5 
+      }
+    }
+    settings.value.sync.webdav[key] = value
+    toast.success('WebDAV 设置已保存')
+  } catch (error) {
+    console.error('保存 WebDAV 设置失败', error)
+    toast.error('保存 WebDAV 设置失败')
+  }
+}
+
+// 手动触发同步
+const triggerSync = async (): Promise<void> => {
+  try {
+    const result = await window.api.sync.trigger()
+    if (result.success) {
+      toast.success('同步成功')
+    } else {
+      toast.error(result.message || '同步失败')
+    }
+    // 重新加载同步状态
+    await loadSyncStatus()
+  } catch (error) {
+    console.error('触发同步失败', error)
+    toast.error('触发同步失败')
+  }
+}
+
 const showResetDialog = ref(false)
 const resetSettings = async (): Promise<void> => {
   try {
@@ -390,6 +533,7 @@ onMounted(() => {
   loadSettings()
   loadInstalledPlugins()
   loadSystemInfo()
+  loadSyncStatus()
 
   pluginEventHandler = () => {
     loadSettings()
@@ -794,6 +938,132 @@ const exportSystemInfo = (): void => {
                     <span class="text-sm text-gray-700 dark:text-gray-300">{{ item.name }}</span>
                     <Kbd>{{ item.shortcut }}</Kbd>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 同步设置 -->
+        <div v-if="activeTab === 'sync'" class="p-6 bg-white dark:bg-gray-900">
+          <div class="max-w-2xl">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">同步设置</h2>
+
+            <div class="space-y-6">
+              <!-- 同步开关 -->
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  配置同步
+                </h3>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
+                  启用后，配置将自动同步到 WebDAV 服务器
+                </p>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-sm text-gray-800 dark:text-gray-200">启用同步</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      同步配置到 WebDAV 服务器
+                    </div>
+                  </div>
+                  <Switch
+                    :checked="settings.sync.enabled"
+                    @update:checked="saveSyncSetting('enabled', $event)"
+                  />
+                </div>
+              </div>
+
+              <!-- WebDAV 配置 -->
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  WebDAV 配置
+                </h3>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
+                  配置 WebDAV 服务器信息，用于同步配置
+                </p>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                      WebDAV URL
+                    </label>
+                    <Input
+                      v-model="settings.sync.webdav.url"
+                      placeholder="https://example.com/webdav"
+                      @change="saveWebDavSetting('url', settings.sync.webdav.url)"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                      用户名
+                    </label>
+                    <Input
+                      v-model="settings.sync.webdav.username"
+                      placeholder="用户名"
+                      @change="saveWebDavSetting('username', settings.sync.webdav.username)"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                      密码
+                    </label>
+                    <Input
+                      v-model="settings.sync.webdav.password"
+                      type="password"
+                      placeholder="密码"
+                      @change="saveWebDavSetting('password', settings.sync.webdav.password)"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                      同步间隔（分钟）
+                    </label>
+                    <Input
+                      v-model.number="settings.sync.webdav.syncInterval"
+                      type="number"
+                      min="1"
+                      max="60"
+                      @change="saveWebDavSetting('syncInterval', settings.sync.webdav.syncInterval)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- 同步状态 -->
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  同步状态
+                </h3>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">状态</span>
+                    <span :class="[
+                      'text-sm px-2 py-1 rounded-full',
+                      syncStatus.status === 'idle' ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' :
+                      syncStatus.status === 'syncing' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' :
+                      syncStatus.status === 'success' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' :
+                      'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
+                    ]">
+                      {{ syncStatus.status === 'idle' ? '空闲' :
+                         syncStatus.status === 'syncing' ? '同步中' :
+                         syncStatus.status === 'success' ? '同步成功' :
+                         '同步失败' }}
+                    </span>
+                  </div>
+                  <div v-if="syncStatus.lastSync" class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">上次同步</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                      {{ new Date(syncStatus.lastSync).toLocaleString() }}
+                    </span>
+                  </div>
+                  <div v-if="syncStatus.error" class="text-sm text-red-600 dark:text-red-400">
+                    {{ syncStatus.error }}
+                  </div>
+                  <button
+                    class="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
+                    @click="triggerSync"
+                    :disabled="syncStatus.status === 'syncing'"
+                  >
+                    {{ syncStatus.status === 'syncing' ? '同步中...' : '手动同步' }}
+                  </button>
                 </div>
               </div>
             </div>

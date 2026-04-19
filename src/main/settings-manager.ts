@@ -30,6 +30,16 @@ export interface AppSettings {
     theme: 'light' | 'dark' | 'system'
     sidebarWidth: number
   }
+  // WebDAV 同步设置
+  sync: {
+    enabled: boolean
+    webdav: {
+      url: string
+      username: string
+      password: string
+      syncInterval: number // 同步间隔（分钟）
+    }
+  }
 }
 
 /**
@@ -50,6 +60,15 @@ const defaultSettings: AppSettings = {
   appearance: {
     theme: 'system',
     sidebarWidth: 208
+  },
+  sync: {
+    enabled: false,
+    webdav: {
+      url: '',
+      username: '',
+      password: '',
+      syncInterval: 5 // 默认5分钟同步一次
+    }
   }
 }
 
@@ -99,7 +118,15 @@ export class SettingsManager {
       // 兼容旧版本设置文件（无插件快捷键时回退为空数组）
       pluginShortcuts: Array.isArray(loaded.pluginShortcuts) ? loaded.pluginShortcuts : [],
       general: { ...defaults.general, ...loaded.general },
-      appearance: { ...defaults.appearance, ...loaded.appearance }
+      appearance: { ...defaults.appearance, ...loaded.appearance },
+      sync: {
+        ...defaults.sync,
+        ...loaded.sync,
+        webdav: {
+          ...defaults.sync.webdav,
+          ...loaded.sync?.webdav
+        }
+      }
     }
   }
 
@@ -231,6 +258,16 @@ export class SettingsManager {
     }
     if (partial.appearance) {
       this.settings.appearance = { ...this.settings.appearance, ...partial.appearance }
+    }
+    if (partial.sync) {
+      this.settings.sync = {
+        ...this.settings.sync,
+        ...partial.sync,
+        webdav: {
+          ...this.settings.sync.webdav,
+          ...partial.sync.webdav
+        }
+      }
     }
     this.saveSettings()
   }

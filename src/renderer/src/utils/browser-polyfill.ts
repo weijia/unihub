@@ -1,5 +1,6 @@
 // Browser polyfill for Electron API
 import JSZip from 'jszip'
+import { createWebDAVFileSystem } from 'zen-fs-webdav'
 
 // 模拟 electronAPI
 export const electronAPI = {
@@ -546,6 +547,28 @@ export const api = {
         return { success: false, message: error instanceof Error ? error.message : '获取设置失败' }
       }
     },
+    reset: async () => {
+      console.log('[Browser Polyfill] settings.reset')
+      try {
+        localStorage.removeItem('unihub_settings')
+        return { success: true }
+      } catch (error) {
+        console.error('[Browser Polyfill] 重置设置失败:', error)
+        return { success: false, message: error instanceof Error ? error.message : '重置设置失败' }
+      }
+    },
+    update: async (partial: any) => {
+      console.log('[Browser Polyfill] settings.update:', partial)
+      try {
+        const settings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
+        Object.assign(settings, partial)
+        localStorage.setItem('unihub_settings', JSON.stringify(settings))
+        return { success: true }
+      } catch (error) {
+        console.error('[Browser Polyfill] 更新设置失败:', error)
+        return { success: false, message: error instanceof Error ? error.message : '更新设置失败' }
+      }
+    },
     getShortcuts: async () => {
       console.log('[Browser Polyfill] settings.getShortcuts')
       try {
@@ -620,15 +643,117 @@ export const api = {
         console.error('[Browser Polyfill] 更新设置失败:', error)
         return { success: false, message: error instanceof Error ? error.message : '更新设置失败' }
       }
-    },
-    reset: async () => {
-      console.log('[Browser Polyfill] settings.reset')
+    }
+  },
+  sync: {
+    status: async () => {
+      console.log('[Browser Polyfill] sync.status')
       try {
-        localStorage.removeItem('unihub_settings')
+        const syncStatus = JSON.parse(localStorage.getItem('unihub_sync_status') || '{}')
+        return {
+          success: true,
+          data: {
+            enabled: syncStatus.enabled || false,
+            lastSync: syncStatus.lastSync || null,
+            status: syncStatus.status || 'idle',
+            error: syncStatus.error || undefined
+          }
+        }
+      } catch (error) {
+        console.error('[Browser Polyfill] 获取同步状态失败:', error)
+        return {
+          success: true,
+          data: {
+            enabled: false,
+            lastSync: null,
+            status: 'idle' as const,
+            error: undefined
+          }
+        }
+      }
+    },
+    trigger: async () => {
+      console.log('[Browser Polyfill] sync.trigger')
+      try {
+        // 获取设置
+        const settings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
+        
+        if (!settings.sync?.enabled) {
+          return { success: false, message: '同步未启用' }
+        }
+
+        if (!settings.sync?.webdav?.url) {
+          return { success: false, message: 'WebDAV URL 未配置' }
+        }
+
+        // 创建 WebDAV 文件系统实例
+        const webdavFs = createWebDAVFileSystem({
+          baseUrl: settings.sync.webdav.url,
+          username: settings.sync.webdav.username || '',
+          password: settings.sync.webdav.password || ''
+        })
+
+        // 实际执行同步操作
+        // 1. 读取本地设置
+        const localSettings = JSON.parse(localStorage.getItem('unihub_settings') || '{}')
+        
+        // 2. 将设置保存到 WebDAV
+        const settingsContent = JSON.stringify(localSettings, null, 2)
+        await webdavFs.writeFile('/unihub-settings.json', settingsContent, { 
+          overwrite: true, 
+          contentType: 'application/json' 
+        })
+
+        // 3. 从 WebDAV 读取最新设置
+        const remoteSettingsContent = await webdavFs.readFile('/unihub-settings.json', { 
+          responseType: 'text' 
+        })
+        const remoteSettings = JSON.parse(remoteSettingsContent as string)
+
+        // 4. 合并设置（使用时间戳或版本号进行冲突解决）
+        // 这里简化处理，直接使用远程设置
+        localStorage.setItem('unihub_settings', JSON.stringify(remoteSettings))
+
+        // 更新同步状态
+        const syncStatus = {
+          enabled: true,
+          lastSync: new Date().toISOString(),
+          status: 'success' as const,
+          error: undefined
+        }
+
+        // 存储同步状态
+        localStorage.setItem('unihub_sync_status', JSON.stringify(syncStatus))
+        
+        console.log('[Browser Polyfill] 同步成功')
+        return { success: true, message: '同步成功' }
+      } catch (error) {
+        console.error('[Browser Polyfill] 触发同步失败:', error)
+        return { success: false, message: error instanceof Error ? error.message : '同步失败' }
+      }
+    },
+    start: async () => {
+      console.log('[Browser Polyfill] sync.start')
+      try {
+        const syncStatus = JSON.parse(localStorage.getItem('unihub_sync_status') || '{}')
+        syncStatus.enabled = true
+        localStorage.setItem('unihub_sync_status', JSON.stringify(syncStatus))
         return { success: true }
       } catch (error) {
-        console.error('[Browser Polyfill] 重置设置失败:', error)
-        return { success: false, message: error instanceof Error ? error.message : '重置设置失败' }
+        console.error('[Browser Polyfill] 启动同步失败:', error)
+        return { success: false, message: error instanceof Error ? error.message : '启动同步失败' }
+      }
+    },
+    stop: async () => {
+      console.log('[Browser Polyfill] sync.stop')
+      try {
+        const syncStatus = JSON.parse(localStorage.getItem('unihub_sync_status') || '{}')
+        syncStatus.enabled = false
+        localStorage.setItem('unihub_sync_status', JSON.stringify(syncStatus))
+        return { success: true }
+      } catch (error) {
+        console.error('[Browser Polyfill] 停止同步失败:', error)
+        return { success: false, message: error instanceof Error ? error.message : '停止同步失败' }
       }
     }
   },
