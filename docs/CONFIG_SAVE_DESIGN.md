@@ -18,12 +18,12 @@
 
 UniHub 采用分层存储架构，根据不同场景使用不同的存储介质：
 
-| 存储层 | 存储介质 | 适用场景 | 路径/键名 |
-|--------|----------|----------|-----------|
-| 主进程配置 | JSON 文件 | 全局应用设置 | `userData/config/settings.json` |
-| 前端配置 | localStorage | 前端状态持久化 | `localStorage` 键值对 |
-| 插件配置 | localStorage | 插件数据存储 | `unihub_storage_${pluginId}_${key}` |
-| 浏览器环境 | localStorage | 插件在浏览器环境中运行 | `unihub_settings` 等 |
+| 存储层     | 存储介质     | 适用场景               | 路径/键名                           |
+| ---------- | ------------ | ---------------------- | ----------------------------------- |
+| 主进程配置 | JSON 文件    | 全局应用设置           | `userData/config/settings.json`     |
+| 前端配置   | localStorage | 前端状态持久化         | `localStorage` 键值对               |
+| 插件配置   | localStorage | 插件数据存储           | `unihub_storage_${pluginId}_${key}` |
+| 浏览器环境 | localStorage | 插件在浏览器环境中运行 | `unihub_settings` 等                |
 
 ### 2.2 核心组件
 
@@ -102,6 +102,7 @@ const defaultSettings: AppSettings = {
 #### 4.1.1 SettingsManager 类
 
 **核心功能**：
+
 - 配置文件的加载与保存
 - 配置的合并与验证
 - 配置的增删改查操作
@@ -109,6 +110,7 @@ const defaultSettings: AppSettings = {
 - 重置为默认值
 
 **关键方法**：
+
 - `loadSettings()`：加载配置文件
 - `saveSettings()`：保存配置到文件
 - `mergeSettings()`：深度合并配置
@@ -123,6 +125,7 @@ const defaultSettings: AppSettings = {
 #### 4.2.1 useLocalStorage 组合式函数
 
 **核心功能**：
+
 - 类型安全的 localStorage 操作
 - 自动监听变化并同步到存储
 - 支持深度监听对象变化
@@ -148,11 +151,13 @@ const isFirstRun = useLocalStorageBoolean('isFirstRun', true)
 #### 4.3.1 Browser Polyfill
 
 **核心功能**：
+
 - 模拟主进程存储接口
 - 提供插件存储能力
 - 在浏览器环境中持久化配置
 
 **存储结构**：
+
 - 应用设置：`unihub_settings`
 - 插件存储：`unihub_storage_${pluginId}_${key}`
 - 侧边栏状态：`unihub_sidebar_collapsed`
@@ -165,15 +170,15 @@ const isFirstRun = useLocalStorageBoolean('isFirstRun', true)
 
 主进程通过 IPC 暴露以下配置管理接口：
 
-| 接口名称 | 功能描述 | 参数 | 返回值 |
-|---------|---------|------|--------|
-| `settings:getAll` | 获取所有配置 | 无 | `AppSettings` |
-| `settings:getShortcuts` | 获取快捷键设置 | 无 | `AppSettings['shortcuts']` |
-| `settings:setShortcut` | 设置系统快捷键 | key: string, value: string | `{ success: boolean }` |
-| `settings:setPluginShortcut` | 设置插件快捷键 | pluginId: string, value: string | `{ success: boolean, message?: string }` |
-| `settings:removePluginShortcut` | 移除插件快捷键 | pluginId: string | `{ success: boolean }` |
-| `settings:update` | 批量更新配置 | partial: Partial<AppSettings> | `{ success: boolean }` |
-| `settings:reset` | 重置为默认配置 | 无 | `{ success: boolean }` |
+| 接口名称                        | 功能描述       | 参数                            | 返回值                                   |
+| ------------------------------- | -------------- | ------------------------------- | ---------------------------------------- |
+| `settings:getAll`               | 获取所有配置   | 无                              | `AppSettings`                            |
+| `settings:getShortcuts`         | 获取快捷键设置 | 无                              | `AppSettings['shortcuts']`               |
+| `settings:setShortcut`          | 设置系统快捷键 | key: string, value: string      | `{ success: boolean }`                   |
+| `settings:setPluginShortcut`    | 设置插件快捷键 | pluginId: string, value: string | `{ success: boolean, message?: string }` |
+| `settings:removePluginShortcut` | 移除插件快捷键 | pluginId: string                | `{ success: boolean }`                   |
+| `settings:update`               | 批量更新配置   | partial: Partial<AppSettings>   | `{ success: boolean }`                   |
+| `settings:reset`                | 重置为默认配置 | 无                              | `{ success: boolean }`                   |
 
 **文件路径**：`src/main/index.ts` (552-672行)
 
@@ -202,10 +207,12 @@ const isFirstRun = useLocalStorageBoolean('isFirstRun', true)
 插件可以通过以下方式存储配置：
 
 **主进程环境**：
+
 - 使用 `pluginManager` 提供的存储接口
 - 存储在插件专用目录
 
 **浏览器环境**：
+
 - 使用 `browser-polyfill` 提供的存储接口
 - 存储在 localStorage 中，键名为 `unihub_storage_${pluginId}_${key}`
 

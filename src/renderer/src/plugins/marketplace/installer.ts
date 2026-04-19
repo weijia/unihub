@@ -210,20 +210,24 @@ export class PluginInstaller {
           console.log('🔧 [Installer] 插件名称:', metadata.name)
           component = {
             render() {
-              return h('div', {
-                class: 'w-full h-full plugin-html-container',
-                'data-plugin-id': this.pluginId
-              }, [
-                h('iframe', {
-                  srcdoc: this.htmlContent,
-                  class: 'w-full h-full border-0',
-                  sandbox: 'allow-scripts allow-same-origin',
-                  onLoad: this.onIframeLoad,
-                  onError: this.onIframeError,
-                  onLoadstart: this.onIframeLoadStart,
-                  onLoadend: this.onIframeLoadEnd
-                })
-              ])
+              return h(
+                'div',
+                {
+                  class: 'w-full h-full plugin-html-container',
+                  'data-plugin-id': this.pluginId
+                },
+                [
+                  h('iframe', {
+                    srcdoc: this.htmlContent,
+                    class: 'w-full h-full border-0',
+                    sandbox: 'allow-scripts allow-same-origin',
+                    onLoad: this.onIframeLoad,
+                    onError: this.onIframeError,
+                    onLoadstart: this.onIframeLoadStart,
+                    onLoadend: this.onIframeLoadEnd
+                  })
+                ]
+              )
             },
             data() {
               return {
@@ -254,19 +258,22 @@ export class PluginInstaller {
                 console.log('🔧 [Installer] this.$el:', this.$el)
                 console.log('🔧 [Installer] this.$el 类型:', typeof this.$el)
                 console.log('🔧 [Installer] this.$el 构造函数:', this.$el?.constructor?.name)
-                
+
                 // 安全检查 this.$el
                 if (this.$el && typeof this.$el.querySelector === 'function') {
                   console.log('🔧 [Installer] 组件根元素存在且有 querySelector 方法')
                   const iframe = this.$el.querySelector('iframe')
                   console.log('🔧 [Installer] 直接查找 iframe:', iframe)
                   if (iframe) {
-                    console.log('🔧 [Installer] iframe srcdoc:', (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置')
+                    console.log(
+                      '🔧 [Installer] iframe srcdoc:',
+                      (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置'
+                    )
                   }
                 } else {
                   console.warn('🔧 [Installer] this.$el 不是有效的 DOM 元素:', this.$el)
                 }
-                
+
                 // 同时也通过选择器检查
                 try {
                   const container = document.querySelector(
@@ -278,7 +285,10 @@ export class PluginInstaller {
                     const iframe = container.querySelector('iframe')
                     console.log('🔧 [Installer] 从容器查找 iframe:', iframe)
                     if (iframe) {
-                      console.log('🔧 [Installer] iframe srcdoc:', (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置')
+                      console.log(
+                        '🔧 [Installer] iframe srcdoc:',
+                        (iframe as HTMLIFrameElement).srcdoc ? '已设置' : '未设置'
+                      )
                     }
                   }
                 } catch (error) {
@@ -341,13 +351,7 @@ export class PluginInstaller {
               throw new Error(`Module ${name} not found`)
             }
 
-            const executeCode = new Function(
-              'module',
-              'exports',
-              'require',
-              'window',
-              entryContent
-            )
+            const executeCode = new Function('module', 'exports', 'require', 'window', entryContent)
             executeCode(module, module.exports, require, window)
 
             const plugin = module.exports.default || module.exports
@@ -359,28 +363,52 @@ export class PluginInstaller {
               console.warn('🔧 [Installer] 从入口文件提取插件组件失败，使用默认组件')
               component = {
                 render() {
-                  return h('div', {
-                    class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
-                    style: 'min-height: 300px;'
-                  }, [
-                    h('h2', {
-                      class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
-                    }, `插件名称: ${this.pluginName}`),
-                    h('div', {
-                      class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
-                      style: 'min-height: 200px;'
-                    }, [
-                      h('p', {
-                        class: 'text-gray-600 dark:text-gray-400'
-                      }, '这是浏览器环境下的插件内容'),
-                      h('p', {
-                        class: 'text-gray-600 dark:text-gray-400 mt-2'
-                      }, `插件 ID: ${this.pluginId}`),
-                      h('p', {
-                        class: 'text-gray-600 dark:text-gray-400 mt-2'
-                      }, `插件版本: ${this.pluginVersion}`)
-                    ])
-                  ])
+                  return h(
+                    'div',
+                    {
+                      class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
+                      style: 'min-height: 300px;'
+                    },
+                    [
+                      h(
+                        'h2',
+                        {
+                          class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
+                        },
+                        `插件名称: ${this.pluginName}`
+                      ),
+                      h(
+                        'div',
+                        {
+                          class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
+                          style: 'min-height: 200px;'
+                        },
+                        [
+                          h(
+                            'p',
+                            {
+                              class: 'text-gray-600 dark:text-gray-400'
+                            },
+                            '这是浏览器环境下的插件内容'
+                          ),
+                          h(
+                            'p',
+                            {
+                              class: 'text-gray-600 dark:text-gray-400 mt-2'
+                            },
+                            `插件 ID: ${this.pluginId}`
+                          ),
+                          h(
+                            'p',
+                            {
+                              class: 'text-gray-600 dark:text-gray-400 mt-2'
+                            },
+                            `插件版本: ${this.pluginVersion}`
+                          )
+                        ]
+                      )
+                    ]
+                  )
                 },
                 data() {
                   return {
@@ -395,22 +423,38 @@ export class PluginInstaller {
             console.error('🔧 [Installer] 执行插件入口文件失败:', error)
             component = {
               render() {
-                return h('div', {
-                  class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
-                  style: 'min-height: 300px;'
-                }, [
-                  h('h2', {
-                    class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
-                  }, `插件名称: ${this.pluginName}`),
-                  h('div', {
-                    class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
-                    style: 'min-height: 200px;'
-                  }, [
-                    h('p', {
-                      class: 'text-gray-600 dark:text-gray-400'
-                    }, `加载失败: ${this.errorMessage}`)
-                  ])
-                ])
+                return h(
+                  'div',
+                  {
+                    class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
+                    style: 'min-height: 300px;'
+                  },
+                  [
+                    h(
+                      'h2',
+                      {
+                        class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
+                      },
+                      `插件名称: ${this.pluginName}`
+                    ),
+                    h(
+                      'div',
+                      {
+                        class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
+                        style: 'min-height: 200px;'
+                      },
+                      [
+                        h(
+                          'p',
+                          {
+                            class: 'text-gray-600 dark:text-gray-400'
+                          },
+                          `加载失败: ${this.errorMessage}`
+                        )
+                      ]
+                    )
+                  ]
+                )
               },
               data() {
                 return {
@@ -426,25 +470,45 @@ export class PluginInstaller {
           console.warn('🔧 [Installer] 插件入口文件内容不存在，使用默认组件')
           component = {
             render() {
-              return h('div', {
-                class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
-                style: 'min-height: 300px;'
-              }, [
-                h('h2', {
-                  class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
-                }, `插件名称: ${this.pluginName}`),
-                h('div', {
-                  class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
-                  style: 'min-height: 200px;'
-                }, [
-                  h('p', {
-                    class: 'text-gray-600 dark:text-gray-400'
-                  }, '插件内容加载中...'),
-                  h('p', {
-                    class: 'text-gray-600 dark:text-gray-400 mt-2'
-                  }, `插件 ID: ${this.pluginId}`)
-                ])
-              ])
+              return h(
+                'div',
+                {
+                  class: 'w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4',
+                  style: 'min-height: 300px;'
+                },
+                [
+                  h(
+                    'h2',
+                    {
+                      class: 'text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'
+                    },
+                    `插件名称: ${this.pluginName}`
+                  ),
+                  h(
+                    'div',
+                    {
+                      class: 'flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-4',
+                      style: 'min-height: 200px;'
+                    },
+                    [
+                      h(
+                        'p',
+                        {
+                          class: 'text-gray-600 dark:text-gray-400'
+                        },
+                        '插件内容加载中...'
+                      ),
+                      h(
+                        'p',
+                        {
+                          class: 'text-gray-600 dark:text-gray-400 mt-2'
+                        },
+                        `插件 ID: ${this.pluginId}`
+                      )
+                    ]
+                  )
+                ]
+              )
             },
             data() {
               return {

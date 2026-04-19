@@ -496,7 +496,12 @@ const handleThirdPartyPlugin = (tabId: string, action: 'open' | 'close' | 'destr
   }
 
   const plugin = pluginRegistry.get(tab.pluginId)
-  console.log('🔧 [handleThirdPartyPlugin] 找到插件:', plugin?.metadata?.name, 'isThirdParty:', plugin?.metadata?.isThirdParty)
+  console.log(
+    '🔧 [handleThirdPartyPlugin] 找到插件:',
+    plugin?.metadata?.name,
+    'isThirdParty:',
+    plugin?.metadata?.isThirdParty
+  )
   if (plugin?.metadata.isThirdParty) {
     console.log('🔧 [handleThirdPartyPlugin] 执行插件动作:', action, 'pluginId:', tab.pluginId)
     window.api.plugin[action](tab.pluginId)
@@ -510,13 +515,13 @@ const handleThirdPartyPlugin = (tabId: string, action: 'open' | 'close' | 'destr
 // 监听标签切换，显示/隐藏第三方插件视图（不销毁）
 watch(activeTabId, (newTabId, oldTabId) => {
   console.log('🔧 [标签切换] 开始处理标签切换:', { oldTabId, newTabId })
-  
+
   // 关闭旧标签的第三方插件
   if (oldTabId) {
     console.log('🔧 [标签切换] 关闭旧标签的第三方插件:', oldTabId)
     handleThirdPartyPlugin(oldTabId, 'close')
   }
-  
+
   // 打开新标签的第三方插件
   if (newTabId) {
     console.log('🔧 [标签切换] 打开新标签的第三方插件:', newTabId)
@@ -529,7 +534,12 @@ watch(activeTabId, (newTabId, oldTabId) => {
     console.log('🔧 [标签切换] 找到新标签:', newTab)
     if (newTab) {
       const plugin = pluginRegistry.get(newTab.pluginId)
-      console.log('🔧 [标签切换] 找到插件:', plugin?.metadata?.name, 'isThirdParty:', plugin?.metadata?.isThirdParty)
+      console.log(
+        '🔧 [标签切换] 找到插件:',
+        plugin?.metadata?.name,
+        'isThirdParty:',
+        plugin?.metadata?.isThirdParty
+      )
       if (!plugin?.metadata.isThirdParty) {
         // 内置组件，聚焦主窗口
         console.log('🔧 [标签切换] 聚焦主窗口（非第三方插件）')
@@ -537,7 +547,7 @@ watch(activeTabId, (newTabId, oldTabId) => {
       }
     }
   }
-  
+
   console.log('🔧 [标签切换] 标签切换处理完成')
 })
 

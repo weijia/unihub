@@ -14,19 +14,8 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/shield.svg",
       "category": "tool",
-      "keywords": [
-        "2fa",
-        "totp",
-        "otp",
-        "auth",
-        "authenticator",
-        "验证码",
-        "双因素认证"
-      ],
-      "permissions": [
-        "clipboard",
-        "storage"
-      ],
+      "keywords": ["2fa", "totp", "otp", "auth", "authenticator", "验证码", "双因素认证"],
+      "permissions": ["clipboard", "storage"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/2fa-authenticator/1.0.0/plugin.zip"
       },
@@ -51,17 +40,8 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/calculator.svg",
       "category": "tool",
-      "keywords": [
-        "calculator",
-        "paper",
-        "计算器",
-        "稿纸",
-        "草稿"
-      ],
-      "permissions": [
-        "clipboard",
-        "storage"
-      ],
+      "keywords": ["calculator", "paper", "计算器", "稿纸", "草稿"],
+      "permissions": ["clipboard", "storage"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/calc-paper/1.0.0/plugin.zip"
       },
@@ -86,19 +66,8 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/clipboard.svg",
       "category": "tool",
-      "keywords": [
-        "clipboard",
-        "history",
-        "paste",
-        "copy",
-        "剪贴板",
-        "历史记录"
-      ],
-      "permissions": [
-        "clipboard",
-        "storage",
-        "system"
-      ],
+      "keywords": ["clipboard", "history", "paste", "copy", "剪贴板", "历史记录"],
+      "permissions": ["clipboard", "storage", "system"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/clipboard-history/1.0.2/plugin.zip"
       },
@@ -123,18 +92,8 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-diff.svg",
       "category": "tool",
-      "keywords": [
-        "code",
-        "diff",
-        "compare",
-        "monaco",
-        "代码对比",
-        "差异比较"
-      ],
-      "permissions": [
-        "clipboard",
-        "storage"
-      ],
+      "keywords": ["code", "diff", "compare", "monaco", "代码对比", "差异比较"],
+      "permissions": ["clipboard", "storage"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/code-diff/1.0.0/plugin.zip"
       },
@@ -170,9 +129,7 @@
         "颜色选择器",
         "屏幕取色"
       ],
-      "permissions": [
-        "clipboard"
-      ],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/color-picker/1.0.0/plugin.zip"
       },
@@ -206,11 +163,7 @@
         "formatter",
         "开发工具"
       ],
-      "permissions": [
-        "clipboard",
-        "fs",
-        "http"
-      ],
+      "permissions": ["clipboard", "fs", "http"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/ctool/1.0.0/plugin.zip"
       },
@@ -235,18 +188,8 @@
       },
       "icon": "https://api.iconify.design/mdi/swap-horizontal.svg",
       "category": "tool",
-      "keywords": [
-        "curl",
-        "windows",
-        "shell",
-        "bash",
-        "convert",
-        "命令行",
-        "转换"
-      ],
-      "permissions": [
-        "clipboard"
-      ],
+      "keywords": ["curl", "windows", "shell", "bash", "convert", "命令行", "转换"],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/curl-converter/1.0.1/plugin.zip"
       },
@@ -280,10 +223,7 @@
         "图表",
         "白板"
       ],
-      "permissions": [
-        "clipboard",
-        "fs"
-      ],
+      "permissions": ["clipboard", "fs"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/excalidraw/0.18.0/plugin.zip"
       },
@@ -319,9 +259,7 @@
         "格式化",
         "压缩"
       ],
-      "permissions": [
-        "clipboard"
-      ],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/h5-formatter/1.0.0/plugin.zip"
       },
@@ -346,17 +284,8 @@
       },
       "icon": "https://api.iconify.design/mdi/image-size-select-actual.svg",
       "category": "tool",
-      "keywords": [
-        "image",
-        "compress",
-        "resize",
-        "webp",
-        "图片压缩",
-        "格式转换"
-      ],
-      "permissions": [
-        "clipboard"
-      ],
+      "keywords": ["image", "compress", "resize", "webp", "图片压缩", "格式转换"],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/image-compressor/1.0.0/plugin.zip"
       },
@@ -381,17 +310,8 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-js-official.svg",
       "category": "formatter",
-      "keywords": [
-        "javascript",
-        "js",
-        "format",
-        "formatter",
-        "prettier",
-        "格式化"
-      ],
-      "permissions": [
-        "clipboard"
-      ],
+      "keywords": ["javascript", "js", "format", "formatter", "prettier", "格式化"],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/javascript-formatter/1.0.0/plugin.zip"
       },
@@ -416,18 +336,8 @@
       },
       "icon": "https://api.iconify.design/twemoji/locked-with-key.svg",
       "category": "tool",
-      "keywords": [
-        "jwt",
-        "token",
-        "auth",
-        "encode",
-        "decode",
-        "verify",
-        "认证"
-      ],
-      "permissions": [
-        "clipboard"
-      ],
+      "keywords": ["jwt", "token", "auth", "encode", "decode", "verify", "认证"],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/jwt-tool/1.0.0/plugin.zip"
       },
@@ -453,10 +363,7 @@
       "icon": "https://api.iconify.design/vscode-icons/file-type-markdown.svg",
       "category": "tool",
       "keywords": [],
-      "permissions": [
-        "clipboard",
-        "storage"
-      ],
+      "permissions": ["clipboard", "storage"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/markdown-editor/1.0.0/plugin.zip"
       },
@@ -490,10 +397,7 @@
         "密码生成器",
         "安全"
       ],
-      "permissions": [
-        "clipboard",
-        "storage"
-      ],
+      "permissions": ["clipboard", "storage"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/password-manager/1.0.0/plugin.zip"
       },
@@ -518,16 +422,8 @@
       },
       "icon": "https://api.iconify.design/vscode-icons/file-type-pdf2.svg",
       "category": "tool",
-      "keywords": [
-        "pdf",
-        "merge",
-        "combine",
-        "PDF合并",
-        "文档处理"
-      ],
-      "permissions": [
-        "clipboard"
-      ],
+      "keywords": ["pdf", "merge", "combine", "PDF合并", "文档处理"],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/pdf-merger/1.0.0/plugin.zip"
       },
@@ -552,17 +448,8 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/electric-plug.svg",
       "category": "tool",
-      "keywords": [
-        "port",
-        "process",
-        "network",
-        "监控",
-        "端口",
-        "进程管理"
-      ],
-      "permissions": [
-        "system"
-      ],
+      "keywords": ["port", "process", "network", "监控", "端口", "进程管理"],
+      "permissions": ["system"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/port-manager/1.0.0/plugin.zip"
       },
@@ -597,9 +484,7 @@
         "时间转换",
         "时间段"
       ],
-      "permissions": [
-        "clipboard"
-      ],
+      "permissions": ["clipboard"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/timestamp-tool/1.0.0/plugin.zip"
       },
@@ -624,18 +509,8 @@
       },
       "icon": "https://api.iconify.design/fluent-emoji/memo.svg",
       "category": "tool",
-      "keywords": [
-        "todo",
-        "todolist",
-        "task",
-        "gtd",
-        "productivity",
-        "待办",
-        "任务管理"
-      ],
-      "permissions": [
-        "storage"
-      ],
+      "keywords": ["todo", "todolist", "task", "gtd", "productivity", "待办", "任务管理"],
+      "permissions": ["storage"],
       "install": {
         "zip": "https://unihub-1307847329.cos.ap-shanghai.myqcloud.com/plugins/todolist/1.0.0/plugin.zip"
       },
