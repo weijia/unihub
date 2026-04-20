@@ -4,6 +4,22 @@ import { pluginRegistry } from '@/plugins'
 import { PluginIcon } from '@/components/ui/plugin-icon'
 import { CATEGORY_NAMES, CATEGORY_ORDER, LIMITS } from '@/constants'
 
+// 格式化构建时间
+const formattedBuildTime = computed(() => {
+  try {
+    const date = new Date(__BUILD_TIME__)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return 'Unknown'
+  }
+})
+
 const props = defineProps<{
   recentPlugins: string[]
   favoritePlugins: string[]
@@ -98,7 +114,10 @@ const clearSearch = (): void => {
             </svg>
           </div>
           <div class="text-left">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">UniHub</h1>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+              UniHub
+              <span class="text-sm font-normal text-gray-500 ml-2">{{ formattedBuildTime }}</span>
+            </h1>
             <p class="text-sm text-gray-600 dark:text-gray-400">开发者的通用工具集</p>
           </div>
         </div>

@@ -18,6 +18,7 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     // 模拟 Electron 环境变量
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     // PouchDB 浏览器兼容
