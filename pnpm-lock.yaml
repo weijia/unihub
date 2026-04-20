@@ -57,8 +57,8 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
       universal-sync-v2:
-        specifier: ^1.0.2
-        version: 1.0.2(pouchdb-core@8.0.1(encoding@0.1.13))
+        specifier: ^1.0.7
+        version: 1.0.7(pouchdb-core@8.0.1(encoding@0.1.13))
       vue-sonner:
         specifier: ^2.0.9
         version: 2.0.9
@@ -4669,8 +4669,8 @@ packages:
     resolution: {integrity: sha512-uNaeirEPvpZWSgzwsPGtU2zVSTrn/8L5q/IexZmH0eH6SA73CmAA5U4GwORTxQAZs95TAXLNqeLoPPNO5gZfWg==}
     engines: {node: '>=8'}
 
-  universal-sync-v2@1.0.2:
-    resolution: {integrity: sha512-JCBwK4u7ub3Cp/m/wVzQnuOk1Ze1bmpZyaFLs8kdnrAa9Ak+31+lVdouYVr2f6SUZiCNW62+5IJ22q5CFr27XQ==}
+  universal-sync-v2@1.0.7:
+    resolution: {integrity: sha512-Gy4vj79gvFZeeaxSwA9EogL1Nyw9Ue6nmcdDftuFg9kWikypI5ZNPOnCCxzQleWwl0H72yuJ5fuSCwaIpNrsjg==}
     peerDependencies:
       pouchdb-core: ^7.0.0 || ^8.0.0
 
@@ -10023,7 +10023,7 @@ snapshots:
     dependencies:
       crypto-random-string: 2.0.0
 
-  universal-sync-v2@1.0.2(pouchdb-core@8.0.1(encoding@0.1.13)):
+  universal-sync-v2@1.0.7(pouchdb-core@8.0.1(encoding@0.1.13)):
     dependencies:
       pouchdb-core: 8.0.1(encoding@0.1.13)
       zen-fs-webdav: 0.1.2

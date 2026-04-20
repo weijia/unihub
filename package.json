@@ -51,7 +51,7 @@
     "pouchdb": "^9.0.0",
     "stream-browserify": "^3.0.0",
     "tailwindcss-animate": "^1.0.7",
-    "universal-sync-v2": "^1.0.2",
+    "universal-sync-v2": "^1.0.7",
     "vue-sonner": "^2.0.9",
     "zen-fs-webdav": "^0.1.2"
   },
