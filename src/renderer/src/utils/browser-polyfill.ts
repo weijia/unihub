@@ -741,7 +741,10 @@ export const api = {
           readFile: async (path: string) => {
             try {
               const content = await webdavFs.readFile(path, { responseType: 'text' })
-              return content as string
+              // 确保返回的是字符串
+              const result = typeof content === 'string' ? content : new TextDecoder().decode(content)
+              console.log('[Browser Polyfill] Read file content:', result)
+              return result
             } catch (error) {
               throw error
             }
