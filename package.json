@@ -91,6 +91,7 @@
     "typescript": "^5.9.3",
     "util": "^0.12.5",
     "vite": "^7.2.6",
+    "vite-plugin-node-polyfills": "^0.26.0",
     "vite-plugin-pwa": "^1.2.0",
     "vue": "^3.5.25",
     "vue-eslint-parser": "^10.2.0",
