@@ -44,8 +44,8 @@ function getUploadDirectory() {
       encoding: 'utf8'
     }).trim()
     if (tag) {
-      console.log(`Using tag "${tag}" as upload directory.`)
-      return tag
+      console.log(`Using fixed "release" directory for tagged version.`)
+      return 'release'
     }
   } catch (error) {
     // 没有 tag，使用时间戳
